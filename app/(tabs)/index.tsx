@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView, Platform, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -22,7 +22,7 @@ import Animated, {
   withSequence,
   Easing
 } from 'react-native-reanimated';
-import { ArrowLeft, Send, Edit3 } from 'lucide-react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function CheckInScreen() {
   const router = useRouter();
@@ -91,12 +91,12 @@ export default function CheckInScreen() {
   };
 
   const handleAddNote = () => {
-    haptics.light();
+    haptics.selection(); // Use selection for note add for consistency
     setStep('journal');
   };
 
   const handleCancel = () => {
-    haptics.light();
+    haptics.selection(); // Use selection for cancel for consistency
     clearCurrentEntry();
     setStep('mood');
     setBgColor(colors.surface.bright);
@@ -136,7 +136,6 @@ export default function CheckInScreen() {
       <Text style={[typography.headlineMedium, styles.question]}>
         How are you feeling right now?
       </Text>
-      
       <View style={styles.moodOptions}>
         {moods.map((mood, index) => (
           <MoodOption
@@ -173,14 +172,14 @@ export default function CheckInScreen() {
           onPress={handleAddNote}
           variant="tonal"
           style={styles.actionButton}
-          icon={<Edit3 size={18} color={colors.secondary[40]} />}
+          icon={<MaterialIcons name="edit" size={24} color={colors.accent[40]} />}
         />
         
         <Button
           title="Save Moment"
           onPress={handleSaveMoment}
           style={styles.actionButton}
-          icon={<Send size={18} color={colors.neutral[99]} />}
+          icon={<MaterialIcons name="send" size={24} color={colors.neutral[99]} />}
         />
         
         <Button
@@ -188,7 +187,7 @@ export default function CheckInScreen() {
           onPress={handleCancel}
           variant="text"
           style={[styles.actionButton, styles.cancelButton]}
-          icon={<ArrowLeft size={18} color={colors.primary[40]} />}
+          icon={<MaterialIcons name="arrow-back" size={24} color={colors.primary[40]} />}
         />
       </View>
     </Animated.View>
@@ -223,18 +222,18 @@ export default function CheckInScreen() {
           title="Save Moment"
           onPress={handleSaveMoment}
           style={styles.actionButton}
-          icon={<Send size={18} color={colors.neutral[99]} />}
+          icon={<MaterialIcons name="send" size={24} color={colors.neutral[99]} />}
         />
         
         <Button
           title="Back"
           onPress={() => {
-            haptics.light();
+            haptics.selection(); // Use selection for back for consistency
             setStep('guidance');
           }}
           variant="text"
           style={styles.actionButton}
-          icon={<ArrowLeft size={18} color={colors.primary[40]} />}
+          icon={<MaterialIcons name="arrow-back" size={24} color={colors.primary[40]} />}
         />
       </View>
     </Animated.View>
@@ -290,79 +289,92 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 24,
+    paddingHorizontal: 32, // increased for more white space
+    paddingTop: 48,
+    paddingBottom: 40,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
+    gap: 32, // add vertical spacing between sections
   },
   
   // Mood selection
   moodContainer: {
     alignItems: 'center',
+    marginBottom: 32,
   },
   question: {
     textAlign: 'center',
     marginBottom: 32,
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
+  },
+  moodCarousel: {
+    paddingHorizontal: 10, // Add some horizontal padding for the carousel
   },
   moodOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 16,
-    marginBottom: 24,
+    alignItems: 'center',
+    gap: 24,
+    marginBottom: 32,
+    maxWidth: 340, // keep grid centered and compact
+    alignSelf: 'center',
   },
   
   // Guidance
   guidanceContainer: {
     alignItems: 'center',
+    marginBottom: 32,
   },
   guidanceCard: {
     marginBottom: 32,
     width: '100%',
-    padding: 24,
+    padding: 32, // more padding for card
   },
   guidanceText: {
     textAlign: 'center',
     fontStyle: 'italic',
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   actionsContainer: {
     width: '100%',
-    gap: 12,
+    gap: 16,
+    marginTop: 16,
   },
   actionButton: {
-    marginTop: 4,
+    marginTop: 8,
     width: '100%',
   },
   cancelButton: {
-    marginTop: 8,
+    marginTop: 16,
   },
   
   // Journal
   journalContainer: {
     alignItems: 'center',
+    marginBottom: 32,
   },
   journalTitle: {
     marginBottom: 24,
     textAlign: 'center',
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   journalInput: {
     width: '100%',
     minHeight: 120,
     backgroundColor: colors.surface.containerLowest,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     fontSize: 16,
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
     textAlignVertical: 'top',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   characterCount: {
     alignSelf: 'flex-end',
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     marginBottom: 24,
   },
   
@@ -370,13 +382,14 @@ const styles = StyleSheet.create({
   savedContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 48,
   },
   savedTitle: {
     marginBottom: 16,
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   savedText: {
     textAlign: 'center',
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
 });

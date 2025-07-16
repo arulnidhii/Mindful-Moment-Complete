@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: colors.surface.container,
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: colors.blue.dark,
+    backgroundColor: colors.primary[40],
     width: 10,
     height: 10,
     borderRadius: 5,

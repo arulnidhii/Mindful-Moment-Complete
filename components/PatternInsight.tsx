@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
 import { MoodEntry } from '@/types/mood';
@@ -205,7 +206,7 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
       {bestTimeOfDay && (
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
-            <Text style={styles.emoji}>⏰</Text>
+            <MaterialCommunityIcons name="clock-outline" size={22} color={colors.text.secondary} />
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
             You tend to feel your best during the <Text style={styles.highlight}>{bestTimeOfDay}</Text>.
@@ -216,7 +217,7 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
       {bestDayOfWeek && (
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
-            <Text style={styles.emoji}>📅</Text>
+            <MaterialCommunityIcons name="calendar-month-outline" size={22} color={colors.text.secondary} />
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
             <Text style={styles.highlight}>{bestDayOfWeek}</Text> appears to be your most positive day of the week.
@@ -227,7 +228,15 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
       {intraDayPattern && (
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
-            <Text style={styles.emoji}>📈</Text>
+            {intraDayPattern === 'improvement' && (
+              <MaterialCommunityIcons name="trending-up" size={22} color={colors.text.secondary} />
+            )}
+            {intraDayPattern === 'decline' && (
+              <MaterialCommunityIcons name="trending-down" size={22} color={colors.text.secondary} />
+            )}
+            {intraDayPattern === 'fluctuation' && (
+              <MaterialCommunityIcons name="swap-horizontal" size={22} color={colors.text.secondary} />
+            )}
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
             {intraDayPattern === 'improvement' && (
@@ -263,7 +272,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: 'rgba(220,220,240,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -276,7 +285,7 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '600',
-    color: colors.blue.dark,
+    color: colors.primary[40],
   },
   note: {
     fontStyle: 'italic',

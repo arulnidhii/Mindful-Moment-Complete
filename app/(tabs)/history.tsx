@@ -60,23 +60,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 32, // more white space
+    paddingTop: 32,
+    paddingBottom: 16,
   },
   title: {
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   statsCard: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    padding: 16,
+    marginHorizontal: 32,
+    marginBottom: 24,
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   statsLabel: {
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
   statsValue: {
     color: colors.primary[40],

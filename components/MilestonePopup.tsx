@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
-import { Award, X } from 'lucide-react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { haptics } from '@/utils/haptics';
 import Animated, { 
   useAnimatedStyle, 
@@ -69,6 +69,19 @@ const MilestonePopup: React.FC<MilestonePopupProps> = ({
     };
   });
   
+  const closeScale = useSharedValue(1);
+  const closeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: closeScale.value }],
+  }));
+  const handleClosePress = () => {
+    haptics.selection();
+    closeScale.value = withSequence(
+      withTiming(0.92, { duration: 80 }),
+      withTiming(1, { duration: 120 })
+    );
+    onClose();
+  };
+  
   const getMilestoneTitle = () => {
     switch (milestone) {
       case 'firstEntry':
@@ -122,12 +135,16 @@ const MilestonePopup: React.FC<MilestonePopupProps> = ({
         entering={Platform.OS !== 'web' ? SlideInUp.duration(400) : FadeIn}
         exiting={Platform.OS !== 'web' ? SlideOutDown.duration(300) : FadeOut}
       >
-        <Pressable style={styles.closeButton} onPress={onClose}>
-          <X size={20} color={colors.semantic.onSurfaceVariant} />
-        </Pressable>
+        <AnimatedPressable
+          style={[styles.closeButton, closeAnimatedStyle]}
+          onPress={handleClosePress}
+          accessibilityLabel="Close milestone popup"
+        >
+          <MaterialIcons name="close" size={24} color={colors.semantic.onSurfaceVariant} />
+        </AnimatedPressable>
         
         <View style={styles.iconContainer}>
-          <Award size={40} color={colors.primary[40]} />
+          <MaterialIcons name="emoji-events" size={24} color={colors.primary[40]} />
         </View>
         
         <Text style={[typography.titleLarge, styles.title]}>
@@ -185,11 +202,11 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     marginBottom: 8,
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   description: {
     textAlign: 'center',
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     marginBottom: 8,
   },
 });

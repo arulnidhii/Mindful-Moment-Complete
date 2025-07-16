@@ -15,6 +15,7 @@ import Animated, {
   Layout
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface MoodHistoryProps {
   entries: MoodEntry[];
@@ -129,9 +130,9 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
               onPress={() => toggleEntrySelection(item.entry_id)}
             >
               {isSelected ? (
-                <CheckCircle size={24} color={colors.primary[40]} />
+                <MaterialIcons name="check-circle" size={24} color={colors.primary[40]} />
               ) : (
-                <Circle size={24} color={colors.semantic.onSurfaceVariant} />
+                <MaterialIcons name="radio-button-unchecked" size={24} color={colors.text.secondary} />
               )}
             </TouchableOpacity>
           )}
@@ -139,7 +140,7 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
           <View style={[styles.entryContent, selectionMode && styles.entryContentWithCheckbox]}>
             <View style={styles.entryHeader}>
               <View style={styles.timestampContainer}>
-                <Clock size={14} color={colors.semantic.onSurfaceVariant} />
+                <MaterialIcons name="access-time" size={14} color={colors.text.secondary} />
                 <Text style={[typography.bodySmall, styles.timestamp]}>
                   {format(item.timestamp)}
                 </Text>
@@ -170,7 +171,7 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
             {item.journal_note ? (
               <View style={styles.journalContainer}>
                 <View style={styles.journalHeader}>
-                  <MessageSquare size={14} color={colors.semantic.onSurfaceVariant} />
+                  <MaterialIcons name="chat" size={14} color={colors.text.secondary} />
                   <Text style={[typography.labelSmall, styles.journalLabel]}>
                     Your note:
                   </Text>
@@ -260,7 +261,7 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
             title={`Delete ${selectedEntries.length} Moment${selectedEntries.length > 1 ? 's' : ''}`}
             onPress={confirmDelete}
             style={styles.deleteButton}
-            icon={<Trash2 size={18} color={colors.neutral[99]} />}
+            icon={<MaterialIcons name="delete" size={18} color={colors.neutral[99]} />}
           />
         </Animated.View>
       )}
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.semantic.surfaceVariant,
+    borderBottomColor: colors.outline,
   },
   selectButton: {
     paddingVertical: 8,
@@ -301,14 +302,14 @@ const styles = StyleSheet.create({
   selectedCount: {
     flex: 1,
     textAlign: 'center',
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
   cancelButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   cancelText: {
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     fontWeight: '500',
   },
   listContainer: {
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     marginLeft: 4,
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
   moodBadge: {
     flexDirection: 'row',
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
   guidanceText: {
     marginBottom: 16,
     fontStyle: 'italic',
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   journalContainer: {
     backgroundColor: colors.surface.containerLow,
@@ -380,13 +381,13 @@ const styles = StyleSheet.create({
   },
   journalLabel: {
     marginLeft: 4,
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
   journalText: {
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   noNote: {
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     fontStyle: 'italic',
   },
   actionBar: {
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface.containerLowest,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.semantic.surfaceVariant,
+    borderTopColor: colors.outline,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   deleteButton: {
-    backgroundColor: colors.error[40],
+    backgroundColor: colors.accent[40],
   },
   emptyContainer: {
     flex: 1,
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
 });
 

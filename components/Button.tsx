@@ -52,6 +52,7 @@ const Button: React.FC<ButtonProps> = ({
   // Animation values - moved inside component body
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const elevationAnim = useSharedValue(variant === 'filled' ? 1 : 0);
   
   const handlePress = () => {
     // Haptic feedback
@@ -71,6 +72,10 @@ const Button: React.FC<ButtonProps> = ({
       withTiming(0.8, { duration: 100 }),
       withTiming(1, { duration: 100 })
     );
+    elevationAnim.value = withSequence(
+      withTiming(4, { duration: 100 }),
+      withTiming(variant === 'filled' ? 1 : 0, { duration: 100 })
+    );
     
     onPress();
   };
@@ -78,18 +83,21 @@ const Button: React.FC<ButtonProps> = ({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
-      opacity: opacity.value
+      opacity: opacity.value,
+      elevation: elevationAnim.value,
+      shadowOpacity: 0.15 * (elevationAnim.value / 4),
+      shadowRadius: 2 * (elevationAnim.value / 4),
     };
   });
   
   const getBackgroundColor = () => {
-    if (disabled) return colors.neutralVariant[80];
+    if (disabled) return colors.neutral[80];
     
     switch (variant) {
       case 'filled':
         return colors.primary[40];
       case 'tonal':
-        return colors.secondary[80];
+        return colors.accent[40];
       case 'outlined':
       case 'text':
         return 'transparent';
@@ -99,13 +107,13 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   const getTextColor = () => {
-    if (disabled) return colors.neutralVariant[40];
+    if (disabled) return colors.neutral[40];
     
     switch (variant) {
       case 'filled':
         return colors.neutral[99];
       case 'tonal':
-        return colors.secondary[20];
+        return colors.accent[10];
       case 'outlined':
       case 'text':
         return colors.primary[40];
@@ -115,8 +123,8 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   const getBorderColor = () => {
-    if (disabled) return colors.neutralVariant[60];
-    if (variant === 'outlined') return colors.semantic.outline;
+    if (disabled) return colors.neutral[60];
+    if (variant === 'outlined') return colors.outline;
     return 'transparent';
   };
   

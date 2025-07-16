@@ -1,96 +1,85 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ViewStyle, TouchableOpacity } from 'react-native';
-import Card from './Card';
+import React from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
-import Animated, { useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
+import { MaterialIcons } from '@expo/vector-icons';
+import Animated, { useSharedValue, withTiming, withSequence, useAnimatedStyle } from 'react-native-reanimated';
+import { haptics } from '@/utils/haptics';
 
 interface InsightCardProps {
   title: string;
   children: React.ReactNode;
   style?: ViewStyle;
-  collapsible?: boolean;
+  onShare?: () => void;
 }
 
-const InsightCard: React.FC<InsightCardProps> = ({ 
-  title, 
-  children, 
-  style,
-  collapsible = false
-}) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const contentHeight = useSharedValue('auto');
-  const opacity = useSharedValue(1);
-
-  const toggleCollapsed = () => {
-    if (collapsed) {
-      setCollapsed(false);
-      opacity.value = withTiming(1, { duration: 300 });
-      contentHeight.value = withTiming('auto', { duration: 300 });
-    } else {
-      setCollapsed(true);
-      opacity.value = withTiming(0, { duration: 300 });
-      contentHeight.value = withTiming(0, { duration: 300 });
-    }
+function InsightCard({ title, children, style, onShare }: InsightCardProps) {
+  // Add animation for share button
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const handleSharePress = () => {
+    haptics.selection();
+    scale.value = withSequence(
+      withTiming(0.92, { duration: 80 }),
+      withTiming(1, { duration: 120 })
+    );
+    onShare && onShare();
   };
-
-  const animatedContentStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      height: contentHeight.value,
-      overflow: 'hidden',
-    };
-  });
-
   return (
-    <Card style={[styles.card, style]}>
-      <View style={styles.header}>
-        <Text style={[typography.heading3, styles.title]}>{title}</Text>
-        {collapsible && (
-          <TouchableOpacity onPress={toggleCollapsed} style={styles.collapseButton}>
-            {collapsed ? (
-              <ChevronDown size={20} color={colors.text.secondary} />
-            ) : (
-              <ChevronUp size={20} color={colors.text.secondary} />
-            )}
-          </TouchableOpacity>
+    <View style={[styles.card, style]}>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{title}</Text>
+        {onShare && (
+          <Animated.View style={animatedStyle}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={handleSharePress}
+              accessibilityLabel={`Share ${title}`}
+              accessibilityRole="button"
+            >
+              <MaterialIcons name="share" size={22} color={colors.semantic.onSurfaceVariant} />
+            </TouchableOpacity>
+          </Animated.View>
         )}
       </View>
-      
-      {collapsible ? (
-        <Animated.View style={animatedContentStyle}>
-          <View style={styles.content}>
-            {children}
-          </View>
-        </Animated.View>
-      ) : (
-        <View style={styles.content}>
-          {children}
-        </View>
-      )}
-    </Card>
+      <View style={styles.content}>{children}</View>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 20,
+    backgroundColor: colors.surface.container,
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   title: {
+    ...typography.titleLarge,
+    color: colors.text.primary,
     flex: 1,
   },
-  collapseButton: {
-    padding: 4,
+  shareButton: {
+    marginLeft: 12,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: colors.surface.containerHigh,
   },
   content: {
-    // Content styling
+    width: '100%',
   },
 });
 

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated as RNAnimated } from 'react-native';
+import Svg, { G, Path, Circle } from 'react-native-svg';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface MoodCount {
   mood: string;
@@ -13,272 +12,183 @@ interface MoodCount {
 
 interface MoodDistributionProps {
   data: MoodCount[];
-  weekData?: MoodCount[];
-  monthData?: MoodCount[];
-  weekDataByDay?: MoodCount[];
-  monthDataByDay?: MoodCount[];
+  size?: number; // Optional: chart size
+  legendFontSize?: number; // Optional: legend font size
+  legendAlign?: 'left' | 'center'; // New: legend alignment
 }
 
-const MoodDistribution: React.FC<MoodDistributionProps> = ({ 
-  data,
-  weekData,
-  monthData,
-  weekDataByDay,
-  monthDataByDay
-}) => {
-  const [timeFrame, setTimeFrame] = useState<'week' | 'month'>('week');
-  const [viewMode, setViewMode] = useState<'by-entry' | 'by-day'>('by-entry');
-  
-  // Use the appropriate data based on selected time frame and view mode
-  const getDisplayData = () => {
-    if (timeFrame === 'week') {
-      return viewMode === 'by-entry' ? (weekData || data) : (weekDataByDay || data);
-    } else {
-      return viewMode === 'by-entry' ? (monthData || data) : (monthDataByDay || data);
-    }
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+  const d = [
+    'M', start.x, start.y,
+    'A', r, r, 0, largeArcFlag, 0, end.x, end.y,
+    'L', cx, cy,
+    'Z',
+  ].join(' ');
+  return d;
+}
+
+function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
+  const rad = (angle - 90) * Math.PI / 180.0;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad),
+  };
+}
+
+const MOOD_COLORS: Record<string, string> = {
+  great: colors.mood.great.medium,
+  good: colors.mood.good.medium,
+  okay: colors.mood.okay.medium,
+  challenged: colors.mood.challenged.medium,
+  struggling: colors.mood.struggling.medium,
+};
+
+const MoodDistribution: React.FC<MoodDistributionProps> = ({ data, size = 140, legendFontSize, legendAlign = 'left' }) => {
+  const radius = size / 2 - 10;
+  const center = size / 2;
+  const total = data.reduce((sum, d) => sum + d.count, 0);
+
+  // Tooltip state
+  const [tooltip, setTooltip] = useState<null | { mood: string; percent: number; count: number; color: string; x: number; y: number }>(null);
+  const tooltipTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle tap on arc
+  const handleArcPress = (d: MoodCount, midAngle: number) => {
+    // Calculate tooltip position (polar to cartesian)
+    const tooltipRadius = radius * 0.85;
+    const pos = polarToCartesian(center, center, tooltipRadius, midAngle);
+    // Clear any existing timeout
+    if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+    setTooltip({
+      mood: d.mood,
+      percent: total === 0 ? 0 : Math.round((d.count / total) * 100),
+      count: d.count,
+      color: MOOD_COLORS[d.mood] || '#ccc',
+      x: pos.x,
+      y: pos.y,
+    });
+    // Auto-dismiss after 2 seconds
+    tooltipTimeout.current = setTimeout(() => setTooltip(null), 2000);
   };
 
-  const displayData = getDisplayData();
-
-  // Find the most frequent mood
-  const getMostFrequentMood = (): string => {
-    if (displayData.length === 0) return 'No data';
-    
-    const sorted = [...displayData].sort((a, b) => b.count - a.count);
-    return sorted[0].mood;
+  // Dismiss tooltip on tap elsewhere
+  const handleChartPress = () => {
+    if (tooltip) setTooltip(null);
   };
 
-  // Fixed return type to ensure we always return exactly two strings
-  const getMoodGradient = (mood: string): [string, string] => {
-    switch (mood.toLowerCase()) {
-      case 'great': return ['#98FB98', '#7CCD7C'];
-      case 'good': return ['#B0E0E6', '#87CEEB'];
-      case 'okay': return ['#E6E6FA', '#D8BFD8'];
-      case 'challenged': return ['#FFA07A', '#FF7F50'];
-      case 'struggling': return ['#D8BFD8', '#9370DB'];
-      default: return ['#E6E6FA', '#D8BFD8'];
-    }
-  };
+  // Pie arcs
+  let startAngle = 0;
+  const arcs = data.map((d, i) => {
+    const angle = total === 0 ? 0 : (d.count / total) * 360;
+    const endAngle = startAngle + angle;
+    const midAngle = startAngle + angle / 2;
+    const path = describeArc(center, center, radius, startAngle, endAngle);
+    const arc = (
+      <TouchableWithoutFeedback key={d.mood} onPress={() => handleArcPress(d, midAngle)}>
+        <Path
+          d={path}
+          fill={MOOD_COLORS[d.mood] || '#ccc'}
+          stroke="#fff"
+          strokeWidth={2}
+          opacity={tooltip && tooltip.mood === d.mood ? 0.7 : 1}
+        />
+      </TouchableWithoutFeedback>
+    );
+    startAngle = endAngle;
+    return arc;
+  });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.timeFrameSelector}>
-        <TouchableOpacity 
-          style={[
-            styles.timeFrameButton, 
-            timeFrame === 'week' && styles.timeFrameButtonActive
-          ]}
-          onPress={() => setTimeFrame('week')}
-        >
-          <Text 
-            style={[
-              styles.timeFrameText, 
-              timeFrame === 'week' && styles.timeFrameTextActive
-            ]}
-          >
-            Week
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.timeFrameButton, 
-            timeFrame === 'month' && styles.timeFrameButtonActive
-          ]}
-          onPress={() => setTimeFrame('month')}
-        >
-          <Text 
-            style={[
-              styles.timeFrameText, 
-              timeFrame === 'month' && styles.timeFrameTextActive
-            ]}
-          >
-            Month
-          </Text>
-        </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={handleChartPress}>
+      <View style={styles.container}>
+        <Svg width={size} height={size}>
+          <G>
+            {arcs}
+            {/* Donut hole */}
+            <Circle cx={center} cy={center} r={radius * 0.55} fill={colors.surface.bright} />
+          </G>
+        </Svg>
+        {/* Tooltip */}
+        {tooltip && (
+          <View style={[styles.tooltip, { left: tooltip.x - 60, top: tooltip.y - 50, borderColor: tooltip.color }]}> 
+            <Text style={[styles.tooltipMood, { color: tooltip.color }]}>{tooltip.mood.charAt(0).toUpperCase() + tooltip.mood.slice(1)}</Text>
+            <Text style={styles.tooltipPercent}>{tooltip.percent}%</Text>
+            <Text style={styles.tooltipCount}>{tooltip.count} check-ins</Text>
+          </View>
+        )}
+        <View style={[styles.legendContainer, legendAlign === 'center' && { alignItems: 'center' }]}> 
+          {data.map((d) => (
+            <View key={d.mood} style={styles.legendRow}>
+              <View style={[styles.legendSwatch, { backgroundColor: MOOD_COLORS[d.mood] || '#ccc' }]} />
+              <Text style={[styles.legendLabel, legendFontSize ? { fontSize: legendFontSize } : null]}>{d.mood.charAt(0).toUpperCase() + d.mood.slice(1)} ({total === 0 ? 0 : Math.round((d.count / total) * 100)}%)</Text>
+            </View>
+          ))}
+        </View>
       </View>
-      
-      <View style={styles.viewModeSelector}>
-        <TouchableOpacity 
-          style={[
-            styles.viewModeButton, 
-            viewMode === 'by-entry' && styles.viewModeButtonActive
-          ]}
-          onPress={() => setViewMode('by-entry')}
-        >
-          <Text 
-            style={[
-              styles.viewModeText, 
-              viewMode === 'by-entry' && styles.viewModeTextActive
-            ]}
-          >
-            By Entry
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.viewModeButton, 
-            viewMode === 'by-day' && styles.viewModeButtonActive
-          ]}
-          onPress={() => setViewMode('by-day')}
-        >
-          <Text 
-            style={[
-              styles.viewModeText, 
-              viewMode === 'by-day' && styles.viewModeTextActive
-            ]}
-          >
-            By Day
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      <Text style={[typography.bodyMedium, styles.periodText]}>
-        {timeFrame === 'week' ? 'Last 7 Days' : 'Last 30 Days'} • {viewMode === 'by-entry' ? 'All Entries' : 'Daily Average'}
-      </Text>
-      
-      {displayData.length > 0 ? (
-        <Animated.View 
-          entering={FadeIn.duration(400)}
-          style={styles.barsContainer}
-        >
-          {displayData.map((item) => {
-            const gradient = getMoodGradient(item.mood);
-            return (
-              <View key={item.mood} style={styles.barItem}>
-                <View style={styles.labelContainer}>
-                  <Text style={typography.bodySmall}>{item.mood}</Text>
-                  <Text style={typography.bodySmall}>{item.percentage}%</Text>
-                </View>
-                <View style={styles.barBackground}>
-                  <LinearGradient 
-                    colors={gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={[
-                      styles.barFill, 
-                      { width: `${item.percentage}%` }
-                    ]} 
-                  />
-                </View>
-              </View>
-            );
-          })}
-        </Animated.View>
-      ) : (
-        <Text style={[typography.bodyMedium, styles.emptyText]}>
-          Record more moments to see your mood distribution.
-        </Text>
-      )}
-      
-      {displayData.length > 0 && (
-        <Text style={[typography.bodyMedium, styles.summaryText]}>
-          This {timeFrame === 'week' ? 'week' : 'month'}, you've most frequently felt <Text style={styles.highlightText}>{getMostFrequentMood()}</Text>.
-          {viewMode === 'by-day' && ' (daily average)'}
-        </Text>
-      )}
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  legendContainer: {
+    marginTop: 28, // Increased from 12 for more space between chart and legend
     width: '100%',
+    alignItems: 'flex-start', // Keep left-aligned for easier reading
   },
-  timeFrameSelector: {
+  legendRow: {
     flexDirection: 'row',
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: colors.surface.containerHigh,
-    padding: 4,
-  },
-  timeFrameButton: {
-    flex: 1,
-    paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: 6,
+    marginBottom: 14, // Increased for more vertical space between legend items
   },
-  timeFrameButtonActive: {
-    backgroundColor: colors.surface.containerLowest,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  legendSwatch: {
+    width: 20, // Slightly larger swatch
+    height: 20,
+    borderRadius: 10,
+    marginRight: 12, // More space between swatch and label
   },
-  timeFrameText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.semantic.onSurfaceVariant,
+  legendLabel: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+    lineHeight: 44, // Increased for descender room
+    paddingBottom: 2, // Extra space for descenders
+    paddingTop: 2,
   },
-  timeFrameTextActive: {
-    color: colors.semantic.onSurface,
-  },
-  viewModeSelector: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: colors.surface.containerHigh,
-    padding: 4,
-  },
-  viewModeButton: {
-    flex: 1,
+  tooltip: {
+    position: 'absolute',
+    minWidth: 110,
+    backgroundColor: colors.surface.bright,
+    borderRadius: 12,
+    borderWidth: 2,
     paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 6,
-  },
-  viewModeButtonActive: {
-    backgroundColor: colors.surface.containerLowest,
+    paddingHorizontal: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 10,
+    alignItems: 'center',
   },
-  viewModeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.semantic.onSurfaceVariant,
-  },
-  viewModeTextActive: {
-    color: colors.semantic.onSurface,
-  },
-  periodText: {
-    marginBottom: 16,
-    color: colors.semantic.onSurfaceVariant,
-  },
-  barsContainer: {
-    marginBottom: 16,
-  },
-  barItem: {
-    marginBottom: 12,
-  },
-  labelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  barBackground: {
-    height: 10,
-    backgroundColor: colors.surface.containerHigh,
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 5,
-  },
-  summaryText: {
-    marginTop: 8,
-  },
-  highlightText: {
+  tooltipMood: {
+    ...typography.bodyMedium,
     fontWeight: '600',
-    color: colors.primary[40],
+    marginBottom: 2,
   },
-  emptyText: {
-    color: colors.semantic.onSurfaceVariant,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
+  tooltipPercent: {
+    ...typography.bodyLarge,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  tooltipCount: {
+    ...typography.bodySmall,
+    color: colors.text.secondary,
   },
 });
 

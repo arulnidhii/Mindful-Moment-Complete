@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { useStreakStore } from '@/store/streakStore';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
-import { Flame } from 'lucide-react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -82,7 +82,7 @@ const StreakIndicator: React.FC<StreakIndicatorProps> = ({
         style={[styles.compactContainer, animatedStyle]}
         entering={FadeIn.duration(300)}
       >
-        <Flame size={16} color={getFlameColor()} />
+        <MaterialIcons name="local-fire-department" size={16} color={getFlameColor()} />
         <Text style={styles.compactText}>{currentStreak}</Text>
       </Animated.View>
     );
@@ -95,7 +95,7 @@ const StreakIndicator: React.FC<StreakIndicatorProps> = ({
         entering={FadeIn.duration(300)}
       >
         <View style={styles.iconContainer}>
-          <Flame size={24} color={getFlameColor()} />
+          <MaterialIcons name="local-fire-department" size={24} color={getFlameColor()} />
         </View>
         
         <View style={styles.textContainer}>
@@ -138,14 +138,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   streakLabel: {
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     marginBottom: 4,
   },
   streakValue: {
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   recordText: {
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
     marginTop: 4,
   },
   compactContainer: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
-    color: colors.semantic.onSurfaceVariant,
+    color: colors.text.secondary,
   },
 });
 

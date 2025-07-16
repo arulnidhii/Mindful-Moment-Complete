@@ -81,11 +81,16 @@ const MoodOption: React.FC<MoodOptionProps> = ({
           backgroundColor: getContainerColor(),
           borderColor: getMoodColor(),
           borderWidth: selected ? 2 : 0,
+          marginHorizontal: 12, // for carousel spacing
+          minWidth: 100, // larger touch target for carousel
         },
         animatedStyle
       ]}
       onPress={handlePress}
       entering={Platform.OS !== 'web' ? FadeIn.delay(index * 100).duration(300) : FadeIn}
+      accessibilityLabel={`Select mood: ${mood.label}`}
+      accessibilityRole="button"
+      accessible
     >
       <Animated.View 
         style={[
@@ -96,12 +101,11 @@ const MoodOption: React.FC<MoodOptionProps> = ({
       >
         <Text style={styles.icon}>{mood.icon}</Text>
       </Animated.View>
-      
       <Text 
         style={[
           typography.labelMedium, 
           styles.label,
-          { color: selected ? getMoodColor() : colors.semantic.onSurfaceVariant }
+          { color: selected ? getMoodColor() : colors.text.secondary }
         ]}
       >
         {mood.label}

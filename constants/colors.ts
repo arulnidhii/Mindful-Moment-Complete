@@ -1,90 +1,48 @@
 // Material 3 inspired color palette for Mindful Moment app
 export default {
-  // Primary color theme with tonal variations
+  // Primary color theme with tonal variations (Luxury Wellness: Deep Indigo)
   primary: {
     0: '#000000',
-    10: '#21005E',
-    20: '#381E72',
-    30: '#4F378B',
-    40: '#6750A4',
-    50: '#7F67BE',
-    60: '#9A82DB',
-    70: '#B69DF8',
-    80: '#D0BCFF',
-    90: '#EADDFF',
-    95: '#F6EDFF',
-    99: '#FFFBFF',
+    10: '#10213A',
+    20: '#1B2D4A',
+    30: '#25405E',
+    40: '#325072',
+    50: '#3E5F85',
+    60: '#4C6F99',
+    70: '#5D80AD',
+    80: '#7A9CC2',
+    90: '#B3C7E6',
+    95: '#E6F0FA',
+    99: '#F9FBFD',
     100: '#FFFFFF',
   },
-  
-  // Secondary color theme
-  secondary: {
+  // Accent color (Soft Gold)
+  accent: {
     0: '#000000',
-    10: '#1D192B',
-    20: '#332D41',
-    30: '#4A4458',
-    40: '#625B71',
-    50: '#7A7289',
-    60: '#958DA5',
-    70: '#B0A7C0',
-    80: '#CCC2DC',
-    90: '#E8DEF8',
-    95: '#F6EDFF',
-    99: '#FFFBFF',
+    10: '#4B3A1B',
+    20: '#7A5E2E',
+    30: '#B89B4A',
+    40: '#E6C97A',
+    50: '#F6E7B2',
+    60: '#FFF6D6',
     100: '#FFFFFF',
   },
-  
-  // Tertiary color theme
-  tertiary: {
-    0: '#000000',
-    10: '#31111D',
-    20: '#492532',
-    30: '#633B48',
-    40: '#7D5260',
-    50: '#986977',
-    60: '#B58392',
-    70: '#D29DAC',
-    80: '#EFB8C8',
-    90: '#FFD8E4',
-    95: '#FFECF1',
-    99: '#FFFBFF',
-    100: '#FFFFFF',
-  },
-  
-  // Error color theme
-  error: {
-    0: '#000000',
-    10: '#410E0B',
-    20: '#601410',
-    30: '#8C1D18',
-    40: '#B3261E',
-    50: '#DC362E',
-    60: '#E46962',
-    70: '#EC928E',
-    80: '#F2B8B5',
-    90: '#F9DEDC',
-    95: '#FCEEEE',
-    99: '#FFFBFF',
-    100: '#FFFFFF',
-  },
-  
-  // Neutral color theme
+  // Neutral color theme (Luxury: Off-white, light gray, charcoal)
   neutral: {
     0: '#000000',
-    10: '#1C1B1F',
-    20: '#313033',
-    30: '#484649',
-    40: '#605D62',
-    50: '#787579',
-    60: '#939094',
-    70: '#AEAAAE',
-    80: '#C9C5CA',
-    90: '#E6E1E5',
-    95: '#F4EFF4',
-    99: '#FFFBFF',
+    10: '#181A1B',
+    20: '#232526',
+    30: '#353738',
+    40: '#4A4C4D',
+    50: '#6A6C6D',
+    60: '#8A8C8D',
+    70: '#B0B2B3',
+    80: '#D6D8D9',
+    90: '#F2F3F4',
+    95: '#FAFAFA',
+    99: '#FFFFFF',
     100: '#FFFFFF',
   },
-  
   // Neutral variant color theme
   neutralVariant: {
     0: '#000000',
@@ -101,62 +59,59 @@ export default {
     99: '#FFFBFF',
     100: '#FFFFFF',
   },
-  
-  // Mood colors - more expressive and vibrant
+  // Mood colors (muted/pastel gradients)
   mood: {
     great: {
-      light: '#4CAF50',
-      medium: '#2E7D32',
-      dark: '#1B5E20',
-      container: '#DCFFD6',
-      onContainer: '#002200',
-      gradient: ['#DCFFD6', '#4CAF50'],
+      light: '#AEE6C5',
+      medium: '#5CBFA6',
+      dark: '#2B7A6B',
+      container: '#E6FAF2',
+      onContainer: '#0A2F23',
+      gradient: ['#E6FAF2', '#AEE6C5'],
     },
     good: {
-      light: '#42A5F5',
-      medium: '#1976D2',
-      dark: '#0D47A1',
-      container: '#D6E4FF',
-      onContainer: '#001A41',
-      gradient: ['#D6E4FF', '#42A5F5'],
+      light: '#B3D8F6',
+      medium: '#5CA9E6',
+      dark: '#2B5A7A',
+      container: '#F0F7FA',
+      onContainer: '#15304A',
+      gradient: ['#F0F7FA', '#B3D8F6'],
     },
     okay: {
-      light: '#AB47BC',
-      medium: '#7B1FA2',
-      dark: '#4A148C',
-      container: '#F2DAFF',
-      onContainer: '#370052',
-      gradient: ['#F2DAFF', '#AB47BC'],
+      light: '#D6C6F6',
+      medium: '#A18BE6',
+      dark: '#5A2B7A',
+      container: '#F7F4FA',
+      onContainer: '#2F1A4A',
+      gradient: ['#F7F4FA', '#D6C6F6'],
     },
     challenged: {
-      light: '#FF9800',
-      medium: '#F57C00',
-      dark: '#E65100',
-      container: '#FFDBBC',
-      onContainer: '#2C1700',
-      gradient: ['#FFDBBC', '#FF9800'],
+      light: '#FFE5B3',
+      medium: '#F6C77A',
+      dark: '#7A5A2B',
+      container: '#FFF9F0',
+      onContainer: '#4A3A15',
+      gradient: ['#FFF9F0', '#FFE5B3'],
     },
     struggling: {
-      light: '#F44336',
-      medium: '#D32F2F',
-      dark: '#B71C1C',
-      container: '#FFDAD6',
-      onContainer: '#410002',
-      gradient: ['#FFDAD6', '#F44336'],
+      light: '#F6B3B3',
+      medium: '#E67A7A',
+      dark: '#7A2B2B',
+      container: '#FAF0F0',
+      onContainer: '#4A1515',
+      gradient: ['#FAF0F0', '#F6B3B3'],
     },
   },
-  
-  // Surface colors
+  // Surface colors (soft, light backgrounds)
   surface: {
-    dim: '#141218',
-    bright: '#FFFBFF',
+    dim: '#181A1B',
+    bright: '#FFFFFF',
     containerLowest: '#FFFFFF',
-    containerLow: '#F7F2FA',
-    container: '#F3EDF7',
-    containerHigh: '#ECE6F0',
-    containerHighest: '#E6E0E9',
+    containerLow: '#F9FBFD',
+    container: '#F2F3F4',
+    containerHigh: '#E6F0FA',
+    containerHighest: '#FAFAFA',
   },
-  
   // Semantic colors
   semantic: {
     success: '#4CAF50',
@@ -174,42 +129,37 @@ export default {
     inverseOnSurface: '#F4EFF4',
     inversePrimary: '#D0BCFF',
   },
-  
-  // Gradients
+  // Gradients (monochrome, calm)
   gradients: {
-    primary: ['#6B46C1', '#38B2AC'],
+    primary: ['#25405E', '#7A9CC2'],
     secondary: ['#38B2AC', '#F6AD55'],
     tertiary: ['#F6AD55', '#F7FAFC'],
-    background: ['#F7FAFC', '#FFFFFF'],
-    surface: ['#F7FAFC', '#FFFFFF'],
-    accent: ['#F6AD55', '#38B2AC'],
+    background: ['#F9FBFD', '#FFFFFF'],
+    surface: ['#F2F3F4', '#FFFFFF'],
+    accent: ['#E6C97A', '#FFF6D6'],
   },
-  
   // Adding these for backward compatibility
   background: {
     primary: '#FFFBFF',
     secondary: '#F4EFF4',
     card: '#F7F2FA',
   },
-  
+  // Text colors
   text: {
-    primary: '#1C1B1F',
-    secondary: '#49454F',
-    tertiary: '#79747E',
+    primary: '#232526',
+    secondary: '#4A4C4D',
+    tertiary: '#6A6C6D',
   },
-  
   blue: {
     light: '#42A5F5',
     medium: '#1976D2',
     dark: '#0D47A1',
   },
-  
   coral: {
     light: '#FF8A65',
     medium: '#FF5722',
     dark: '#E64A19',
   },
-  
-  // Add outline color for Button component
-  outline: '#79747E',
+  // Outline
+  outline: '#B0B2B3',
 };

@@ -2,11 +2,6 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle, Pressable } from 'react-native';
 import colors from '@/constants/colors';
 import elevation from '@/constants/elevation';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming 
-} from 'react-native-reanimated';
 
 interface CardProps {
   children: React.ReactNode;
@@ -15,79 +10,26 @@ interface CardProps {
   onPress?: () => void;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-const Card: React.FC<CardProps> = ({ 
-  children, 
-  style, 
-  elevation: elevationLevel = 1,
-  onPress
-}) => {
-  // Animation values
-  const scale = useSharedValue(1);
-  
-  const handlePressIn = () => {
-    if (onPress) {
-      scale.value = withTiming(0.98, { duration: 100 });
-    }
-  };
-  
-  const handlePressOut = () => {
-    if (onPress) {
-      scale.value = withTiming(1, { duration: 150 });
-    }
-  };
-  
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }]
-    };
-  });
-  
-  const getElevationStyle = () => {
-    switch (elevationLevel) {
-      case 0: return elevation.level0;
-      case 1: return elevation.level1;
-      case 2: return elevation.level2;
-      case 3: return elevation.level3;
-      case 4: return elevation.level4;
-      case 5: return elevation.level5;
-      default: return elevation.level1;
-    }
-  };
-  
-  const CardComponent = onPress ? AnimatedPressable : View;
-  const cardProps = onPress ? {
-    onPress,
-    onPressIn: handlePressIn,
-    onPressOut: handlePressOut,
-    style: [
-      styles.card,
-      getElevationStyle(),
-      style,
-      animatedStyle
-    ]
-  } : {
-    style: [
-      styles.card,
-      getElevationStyle(),
-      style
-    ]
-  };
-  
+const Card: React.FC<CardProps> = ({ children, style }) => {
   return (
-    <CardComponent {...cardProps}>
+    <View style={[styles.card, style]}>
       {children}
-    </CardComponent>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface.containerLowest,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.75)', // glassmorphic effect
+    borderRadius: 22,
+    padding: 20,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(200,200,220,0.25)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
   },
 });
 

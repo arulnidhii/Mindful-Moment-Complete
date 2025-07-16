@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mindful Moment",
     "slug": "mindful-moment-7y4ko4c",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.mindful-moment-7y4ko4c"
+      "package": "com.arulsdk.mindfulmoment7y4ko4c",
+      "versionCode": 5
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -37,6 +38,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://rork.app/"
+      },
+      "eas": {
+        "projectId": "005b9bdf-53d6-4062-ac0d-cb6b2bc96ed5"
+      }
     }
   }
 }

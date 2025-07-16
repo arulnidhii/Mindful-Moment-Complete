@@ -14,11 +14,7 @@ export default function Index() {
     // Small delay to ensure store is loaded
     const timer = setTimeout(() => {
       // Redirect based on user state
-      if (!isOnboarded) {
-        router.replace('/onboarding/welcome');
-      } else {
-        router.replace('/(tabs)');
-      }
+      router.replace('/(tabs)');
     }, 100);
     
     return () => clearTimeout(timer);
@@ -42,11 +38,11 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    marginBottom: 24,
+    marginBottom: 32,
     textAlign: 'center',
-    color: colors.semantic.onSurface,
+    color: colors.text.primary,
   },
   loader: {
-    marginTop: 16,
+    marginTop: 32,
   },
 });
