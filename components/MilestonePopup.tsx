@@ -17,6 +17,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 
+// Create AnimatedPressable component
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 interface MilestonePopupProps {
   milestone: string;
   onClose: () => void;

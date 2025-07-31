@@ -1,15 +1,18 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Platform, View, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { ErrorBoundary } from "./error-boundary";
 import { useUserStore } from "@/store/userStore";
+import { useStreakStore } from "@/store/streakStore";
+import { useMoodStore } from "@/store/moodStore";
 import colors from "@/constants/colors";
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { initializeNotificationCallbacks } from "@/utils/notificationManager";
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -52,10 +55,27 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const { isOnboarded, userName } = useUserStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Initialize notification callbacks to break circular dependencies
+    initializeNotificationCallbacks(useStreakStore, useMoodStore, useUserStore);
+  }, []);
+
+  useEffect(() => {
+    if (isOnboarded) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace('/onboarding');
+    }
+  }, [isOnboarded]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       </Stack>
     </GestureHandlerRootView>
   );

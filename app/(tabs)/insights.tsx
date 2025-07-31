@@ -16,6 +16,8 @@ import ShareableDailyRhythmCard from '@/components/ShareableDailyRhythmCard';
 import ShareablePatternInsightCard from '@/components/ShareablePatternInsightCard';
 import { haptics } from '@/utils/haptics';
 import Animated, { FadeIn, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { getFreshInsights, InsightCard as DynamicInsightCard } from '@/utils/patternEngine';
+import { HighlightedText } from '@/components/HighlightedText';
 
 export default function InsightsScreen() {
   const entries = useMoodStore((state) => state.entries);
@@ -152,6 +154,9 @@ export default function InsightsScreen() {
     setShareModalPatternsVisible(false);
   };
 
+  // Dynamic insights
+  const dynamicInsights = useMemo(() => getFreshInsights(entries, 4), [entries]);
+
   return (
     <GradientBackground variant="secondary">
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -191,7 +196,7 @@ export default function InsightsScreen() {
 
           <Animated.View entering={FadeIn.duration(400)}>
             <InsightCard title="Your Mood Landscape" onShare={() => { haptics.selection(); handleShareMoodLandscape(); }}>
-              <MoodDistribution data={getMoodData()} />
+              <MoodDistribution data={getMoodData()} moodEntries={entries} />
             </InsightCard>
           </Animated.View>
           <Animated.View entering={FadeIn.duration(400)}>
@@ -199,15 +204,33 @@ export default function InsightsScreen() {
               <DailyRhythm entries={entries} />
             </InsightCard>
           </Animated.View>
-          <Animated.View entering={FadeIn.duration(400)}>
-            <InsightCard title="Your Patterns" onShare={() => { haptics.selection(); handleSharePatterns(); }}>
-              {entries.length === 0 ? (
-                <Text style={typography.bodyMedium}>Record more moments to unlock your personal patterns.</Text>
-              ) : (
-                <PatternInsight entries={entries} />
-              )}
-            </InsightCard>
-          </Animated.View>
+          {/* Dynamic Insights Section */}
+          {dynamicInsights.length > 0 ? (
+            dynamicInsights.map((insight, idx) => (
+              <Animated.View key={insight.id} entering={FadeIn.duration(400)}>
+                <InsightCard 
+                  title={insight.title}
+                  icon={insight.icon}
+                  onShare={insight.title === 'Your Patterns' ? () => { haptics.selection(); handleSharePatterns(); } : undefined}
+                >
+                  <HighlightedText
+                    text={insight.content}
+                    highlight={insight.highlight}
+                    highlights={insight.highlights}
+                    style={typography.bodyMedium}
+                  />
+                </InsightCard>
+              </Animated.View>
+            ))
+          ) : (
+            <Animated.View entering={FadeIn.duration(400)}>
+              <InsightCard title="Keep Logging!">
+                <Text style={typography.bodyMedium}>
+                  Log a few more moments to unlock personalized insights about your patterns, boosters, and drainers. You'll see cards like "Your Patterns", "Your Personal Energizer", and "An Energy Drainer to Watch".
+                </Text>
+              </InsightCard>
+            </Animated.View>
+          )}
           <Animated.View entering={FadeIn.duration(400)}>
             <InsightCard title="Your Journey" onShare={() => { haptics.selection(); handleShareJourney(); }}>
               <Text style={typography.bodyMedium}>

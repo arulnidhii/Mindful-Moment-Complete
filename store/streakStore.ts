@@ -16,12 +16,14 @@ interface StreakState {
     hundredEntries: boolean;
   };
   totalEntries: number;
+  onStreakBreak?: () => void; // Callback for when streak breaks
   
   // Actions
   incrementStreak: () => void;
   resetStreak: () => void;
   incrementEntries: () => void;
   checkMilestones: () => string | null; // Returns milestone name if newly achieved, null otherwise
+  setOnStreakBreak: (callback: () => void) => void;
 }
 
 // Helper function to check if two dates are consecutive
@@ -62,9 +64,14 @@ export const useStreakStore = create<StreakState>()(
         hundredEntries: false,
       },
       totalEntries: 0,
+      onStreakBreak: undefined,
+      
+      setOnStreakBreak: (callback) => {
+        set({ onStreakBreak: callback });
+      },
       
       incrementStreak: () => {
-        const { currentStreak, longestStreak, lastCheckInDate } = get();
+        const { currentStreak, longestStreak, lastCheckInDate, onStreakBreak } = get();
         const today = getTodayString();
         
         // If this is the first check-in or if the last check-in was yesterday
@@ -84,6 +91,10 @@ export const useStreakStore = create<StreakState>()(
         } 
         // If streak is broken
         else {
+          // Trigger missed check-in notification via callback
+          if (onStreakBreak) {
+            onStreakBreak();
+          }
           set({
             currentStreak: 1, // Reset to 1 for today's check-in
             lastCheckInDate: today,

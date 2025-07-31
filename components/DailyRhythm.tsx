@@ -17,7 +17,7 @@ const TIME_BLOCKS = [
   { key: 'night', label: 'Night', hours: [21, 22, 23, 0, 1, 2, 3, 4] },
 ];
 
-const GRADIENTS: Record<string, string[]> = {
+const GRADIENTS: Record<string, [string, string]> = {
   early: ['#B3D8F6', '#AEE6C5'],
   morning: ['#AEE6C5', '#F6E7B3'],
   afternoon: ['#F6E7B3', '#B3D8F6'],
@@ -77,7 +77,7 @@ function DailyRhythm({ entries }: DailyRhythmProps) {
               ]}
             />
           </View>
-          <Text style={styles.percentLabel}>{block.percent >= 1 ? `${Math.round(block.percent)}%` : block.count > 0 ? '<1%' : ''}</Text>
+          <Text style={styles.percentLabel} numberOfLines={1} ellipsizeMode="tail" testID={`percent-label-${block.key}`}>{block.percent >= 1 ? `${Math.round(block.percent)}%` : block.count > 0 ? '<1%' : ''}</Text>
         </View>
       ))}
       {bestBlock && bestBlock.count > 0 && (
@@ -99,17 +99,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    flexWrap: 'nowrap',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   blockLabel: {
     ...typography.bodySmall,
     color: colors.text.secondary,
-    width: 90,
+    minWidth: 90,
+    maxWidth: 110,
     textAlign: 'right',
     marginRight: 8,
+    flexShrink: 1,
   },
   barTrack: {
     height: 16,
-    width: MAX_BAR_WIDTH,
+    flex: 1,
     backgroundColor: colors.surface.containerHigh,
     borderRadius: 8,
     overflow: 'hidden',
@@ -122,9 +127,13 @@ const styles = StyleSheet.create({
   percentLabel: {
     ...typography.bodySmall,
     color: colors.text.secondary,
-    width: 36,
+    minWidth: 32,
+    maxWidth: 44,
     textAlign: 'left',
     marginLeft: 4,
+    alignSelf: 'center',
+    flexShrink: 0,
+    flexGrow: 0,
   },
   summary: {
     ...typography.bodyMedium,

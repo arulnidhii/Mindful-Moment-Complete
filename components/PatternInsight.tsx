@@ -206,7 +206,7 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
       {bestTimeOfDay && (
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
-            <MaterialCommunityIcons name="clock-outline" size={22} color={colors.text.secondary} />
+            <MaterialCommunityIcons name="clock-outline" size={24} color={colors.primary[40]} />
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
             You tend to feel your best during the <Text style={styles.highlight}>{bestTimeOfDay}</Text>.
@@ -217,7 +217,7 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
       {bestDayOfWeek && (
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
-            <MaterialCommunityIcons name="calendar-month-outline" size={22} color={colors.text.secondary} />
+            <MaterialCommunityIcons name="calendar-month-outline" size={24} color={colors.primary[40]} />
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
             <Text style={styles.highlight}>{bestDayOfWeek}</Text> appears to be your most positive day of the week.
@@ -229,13 +229,13 @@ const PatternInsight: React.FC<PatternInsightProps> = ({ entries }) => {
         <View style={styles.patternItem}>
           <View style={styles.patternIcon}>
             {intraDayPattern === 'improvement' && (
-              <MaterialCommunityIcons name="trending-up" size={22} color={colors.text.secondary} />
+              <MaterialCommunityIcons name="trending-up" size={24} color={colors.primary[40]} />
             )}
             {intraDayPattern === 'decline' && (
-              <MaterialCommunityIcons name="trending-down" size={22} color={colors.text.secondary} />
+              <MaterialCommunityIcons name="trending-down" size={24} color={colors.primary[40]} />
             )}
             {intraDayPattern === 'fluctuation' && (
-              <MaterialCommunityIcons name="swap-horizontal" size={22} color={colors.text.secondary} />
+              <MaterialCommunityIcons name="swap-horizontal" size={24} color={colors.primary[40]} />
             )}
           </View>
           <Text style={[typography.bodyMedium, styles.patternText]}>
@@ -265,17 +265,23 @@ const styles = StyleSheet.create({
   },
   patternItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    paddingVertical: 4,
   },
   patternIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(220,220,240,0.25)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary[95],
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 16,
+    shadowColor: colors.primary[40],
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   emoji: {
     fontSize: 20,
@@ -284,8 +290,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   highlight: {
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.primary[40],
+    fontSize: 16,
   },
   note: {
     fontStyle: 'italic',

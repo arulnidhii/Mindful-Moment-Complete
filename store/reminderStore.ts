@@ -23,7 +23,7 @@ interface ReminderState {
   toggleDay: (day: keyof ReminderState['days']) => void;
   toggleSmartReminders: () => void;
   addCheckInTime: (time: string) => void;
-  getSuggestedReminderTime: () => string | null;
+  getSuggestedReminderTime: () => string;
 }
 
 export const useReminderStore = create<ReminderState>()(
@@ -74,27 +74,24 @@ export const useReminderStore = create<ReminderState>()(
       getSuggestedReminderTime: () => {
         const { lastCheckInTimes } = get();
         
-        if (lastCheckInTimes.length < 5) {
-          return null; // Not enough data to make a suggestion
+        if (lastCheckInTimes.length < 3) {
+          return '20:00'; // Default to 8:00 PM if not enough data
         }
         
-        // Extract hours and minutes from check-in times
+        // Extract hours from check-in times
         const timeData = lastCheckInTimes.map(timeStr => {
           const date = new Date(timeStr);
-          return {
-            hour: date.getHours(),
-            minute: date.getMinutes()
-          };
+          return date.getHours();
         });
         
         // Group by hour to find the most common check-in hour
         const hourCounts: Record<number, number> = {};
-        timeData.forEach(time => {
-          hourCounts[time.hour] = (hourCounts[time.hour] || 0) + 1;
+        timeData.forEach(hour => {
+          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
         });
         
         // Find the most common hour
-        let mostCommonHour = 0;
+        let mostCommonHour = 20; // Default to 20:00
         let highestCount = 0;
         
         Object.entries(hourCounts).forEach(([hour, count]) => {
@@ -104,17 +101,8 @@ export const useReminderStore = create<ReminderState>()(
           }
         });
         
-        // Calculate average minute within that hour
-        const minutesInHour = timeData
-          .filter(time => time.hour === mostCommonHour)
-          .map(time => time.minute);
-        
-        const avgMinute = Math.round(
-          minutesInHour.reduce((sum, minute) => sum + minute, 0) / minutesInHour.length
-        );
-        
         // Format as HH:MM
-        return `${mostCommonHour.toString().padStart(2, '0')}:${avgMinute.toString().padStart(2, '0')}`;
+        return `${mostCommonHour.toString().padStart(2, '0')}:00`;
       },
     }),
     {

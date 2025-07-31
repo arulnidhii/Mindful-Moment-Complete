@@ -185,6 +185,21 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
                 No note recorded
               </Text>
             )}
+            {/* Boosters and Drainers Pills */}
+            {(item.boosters?.length || item.drainers?.length) ? (
+              <View style={styles.pillRow}>
+                {item.boosters?.map((id) => (
+                  <View key={id} style={[styles.pill, styles.boosterPill]}>
+                    <Text style={styles.pillText}>{id}</Text>
+                  </View>
+                ))}
+                {item.drainers?.map((id) => (
+                  <View key={id} style={[styles.pill, styles.drainerPill]}>
+                    <Text style={styles.pillText}>{id}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
         </Card>
       </Animated.View>
@@ -389,6 +404,35 @@ const styles = StyleSheet.create({
   noNote: {
     color: colors.text.secondary,
     fontStyle: 'italic',
+  },
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    gap: 8,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  boosterPill: {
+    backgroundColor: '#e6f9ed',
+    borderColor: '#b2f2d6',
+    borderWidth: 1,
+  },
+  drainerPill: {
+    backgroundColor: '#ffeaea',
+    borderColor: '#ffb3b3',
+    borderWidth: 1,
+  },
+  pillText: {
+    fontSize: 13,
+    color: colors.text.primary,
   },
   actionBar: {
     position: 'absolute',

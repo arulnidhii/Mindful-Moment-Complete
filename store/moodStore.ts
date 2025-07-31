@@ -2,24 +2,32 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MoodEntry } from '@/types/mood';
-import { MoodType } from '@/constants/moods';
+import { Mood } from '@/constants/moods';
 import { getRandomGuidance } from '@/constants/guidance';
 import { useStreakStore } from './streakStore';
 import { useReminderStore } from './reminderStore';
+import { useUserStore } from './userStore';
 import { haptics } from '@/utils/haptics';
+import { completeInAppReview } from '@/utils/inAppReview';
 
 interface MoodState {
   entries: MoodEntry[];
-  currentMood: MoodType | null;
+  currentMood: string | null;
   currentGuidance: string | null;
   journalNote: string;
+  boosters: string[];
+  drainers: string[];
+  onMilestoneAchieved?: (milestone: string, streakDays: number) => void; // Callback for milestone achievements
   
   // Actions
-  setCurrentMood: (mood: MoodType) => void;
+  setCurrentMood: (mood: string) => void;
   setJournalNote: (note: string) => void;
+  setBoosters: (boosters: string[]) => void;
+  setDrainers: (drainers: string[]) => void;
   saveMoodEntry: () => Promise<string | null>; // Returns milestone if achieved
   deleteEntries: (entryIds: string[]) => void;
   clearCurrentEntry: () => void;
+  setOnMilestoneAchieved: (callback: (milestone: string, streakDays: number) => void) => void;
 }
 
 // Mock user ID for demo purposes
@@ -32,6 +40,13 @@ export const useMoodStore = create<MoodState>()(
       currentMood: null,
       currentGuidance: null,
       journalNote: '',
+      boosters: [],
+      drainers: [],
+      onMilestoneAchieved: undefined,
+      
+      setOnMilestoneAchieved: (callback) => {
+        set({ onMilestoneAchieved: callback });
+      },
       
       setCurrentMood: (mood) => {
         const guidance = getRandomGuidance(mood);
@@ -43,8 +58,11 @@ export const useMoodStore = create<MoodState>()(
         set({ journalNote: note });
       },
       
+      setBoosters: (boosters) => set({ boosters }),
+      setDrainers: (drainers) => set({ drainers }),
+      
       saveMoodEntry: async () => {
-        const { currentMood, currentGuidance, journalNote, entries } = get();
+        const { currentMood, currentGuidance, journalNote, entries, boosters, drainers, onMilestoneAchieved } = get();
         
         if (!currentMood || !currentGuidance) return null;
         
@@ -57,7 +75,9 @@ export const useMoodStore = create<MoodState>()(
           timestamp,
           mood_value: currentMood,
           guidance_text_shown: currentGuidance,
-          journal_note: journalNote || undefined
+          journal_note: journalNote || undefined,
+          boosters: boosters.length > 0 ? boosters : undefined,
+          drainers: drainers.length > 0 ? drainers : undefined
         };
         
         // Update streak and entry count
@@ -70,6 +90,14 @@ export const useMoodStore = create<MoodState>()(
         // Check for milestones
         const milestone = useStreakStore.getState().checkMilestones();
         
+        // Trigger streak celebration notification if milestone is a streak milestone
+        if (milestone && ["threeDay", "sevenDay", "fourteenDay", "thirtyDay"].includes(milestone)) {
+          const currentStreak = useStreakStore.getState().currentStreak;
+          if (onMilestoneAchieved) {
+            onMilestoneAchieved(milestone, currentStreak);
+          }
+        }
+        
         // Provide success haptic feedback
         haptics.success();
         
@@ -77,8 +105,25 @@ export const useMoodStore = create<MoodState>()(
           entries: [newEntry, ...entries],
           currentMood: null,
           currentGuidance: null,
-          journalNote: ''
+          journalNote: '',
+          boosters: [],
+          drainers: []
         });
+        
+        // Trigger in-app review after successful save
+        const updatedEntries = [newEntry, ...entries];
+        const currentStreak = useStreakStore.getState().currentStreak;
+        const { lastReviewDate, setLastReviewDate } = useUserStore.getState();
+        
+        // Use setTimeout to ensure the review doesn't interrupt the save flow
+        setTimeout(() => {
+          completeInAppReview(
+            updatedEntries.length,
+            currentStreak,
+            lastReviewDate,
+            setLastReviewDate
+          );
+        }, 1000);
         
         return milestone;
       },
@@ -95,7 +140,9 @@ export const useMoodStore = create<MoodState>()(
         set({
           currentMood: null,
           currentGuidance: null,
-          journalNote: ''
+          journalNote: '',
+          boosters: [],
+          drainers: []
         });
       }
     }),

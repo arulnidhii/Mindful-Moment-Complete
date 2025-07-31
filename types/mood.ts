@@ -7,6 +7,8 @@ export interface MoodEntry {
   mood_value: string;
   guidance_text_shown: string;
   journal_note?: string;
+  boosters?: string[];
+  drainers?: string[];
 }
 
 export interface UserProfile {

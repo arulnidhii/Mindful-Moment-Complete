@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, Platform, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView, Platform, Button as RNButton, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -7,10 +7,12 @@ import MoodOption from '@/components/MoodOption';
 import MilestonePopup from '@/components/MilestonePopup';
 import typography from '@/constants/typography';
 import colors from '@/constants/colors';
-import moods, { MoodType } from '@/constants/moods';
+import moods from '@/constants/moods';
 import { useMoodStore } from '@/store/moodStore';
 import { useStreakStore } from '@/store/streakStore';
-import { haptics } from '@/utils/haptics';
+import { useReminderStore } from '@/store/reminderStore';
+import * as Notifications from 'expo-notifications';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { 
   FadeIn, 
   FadeOut, 
@@ -23,6 +25,10 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
+import { rescheduleAllNotifications } from '@/utils/notifications';
+import { useUserStore } from '@/store/userStore';
+import { haptics } from '@/utils/haptics';
+import ActivitySelector from '@/components/ActivitySelector';
 
 export default function CheckInScreen() {
   const router = useRouter();
@@ -33,7 +39,9 @@ export default function CheckInScreen() {
     setCurrentMood,
     setJournalNote,
     saveMoodEntry,
-    clearCurrentEntry
+    clearCurrentEntry,
+    setBoosters,
+    setDrainers
   } = useMoodStore();
   
   const [step, setStep] = useState<'mood' | 'guidance' | 'journal' | 'saved'>(
@@ -47,7 +55,21 @@ export default function CheckInScreen() {
   const textOpacity = useSharedValue(0);
   const cardScale = useSharedValue(1);
   
-  const handleMoodSelect = (mood: MoodType) => {
+  const reminder = useReminderStore();
+  const userName = useUserStore((state) => state.userName);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState<{ boosters: string[]; drainers: string[] }>({ boosters: [], drainers: [] });
+  const [activitySelectorVisible, setActivitySelectorVisible] = useState(false);
+
+  // Helper to determine mood valence
+  const getMoodValence = (mood: string | null): 'positive' | 'negative' | 'neutral' => {
+    if (!mood) return 'neutral';
+    if (mood === 'great' || mood === 'good') return 'positive';
+    if (mood === 'challenged' || mood === 'struggling') return 'negative';
+    return 'neutral';
+  };
+
+  const handleMoodSelect = (mood: string) => {
     haptics.selection();
     
     // Set background color based on mood
@@ -71,6 +93,10 @@ export default function CheckInScreen() {
       withTiming(1, { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
     );
     
+    // Set boosters and drainers in the store
+    setBoosters(selectedActivities.boosters);
+    setDrainers(selectedActivities.drainers);
+
     // Save the entry and check for milestones
     const milestone = await saveMoodEntry();
     
@@ -107,6 +133,11 @@ export default function CheckInScreen() {
     setStep('mood');
     setBgColor(colors.surface.bright);
   };
+
+  const handleSaveActivities = () => {
+    setActivitySelectorVisible(false);
+    setStep('journal');
+  };
   
   // Reset background color when returning to mood selection
   useEffect(() => {
@@ -126,6 +157,53 @@ export default function CheckInScreen() {
       transform: [{ scale: cardScale.value }]
     };
   });
+
+  // Helper to schedule notification
+  const scheduleReminderNotification = async (time: string) => {
+    // Cancel all previous notifications
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    if (!reminder.enabled) return;
+    const [hour, minute] = time.split(':').map(Number);
+    // Schedule for each enabled day
+    Object.entries(reminder.days).forEach(async ([day, enabled]) => {
+      if (enabled) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Mindful Moment',
+            body: 'Ready for a mindful pause? Check in with yourself.',
+            sound: true,
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+          },
+          trigger: {
+            type: 'weekly',
+            weekday: getWeekdayNumber(day),
+            hour,
+            minute,
+          },
+        });
+      }
+    });
+  };
+
+  // Helper to map day string to weekday number (1=Sunday, 7=Saturday)
+  const getWeekdayNumber = (day: string) => {
+    switch (day) {
+      case 'sunday': return 1;
+      case 'monday': return 2;
+      case 'tuesday': return 3;
+      case 'wednesday': return 4;
+      case 'thursday': return 5;
+      case 'friday': return 6;
+      case 'saturday': return 7;
+      default: return 1;
+    }
+  };
+
+  // Watch for changes to reminder settings and reschedule notifications
+  useEffect(() => {
+    const { lastNotificationDate } = useUserStore.getState();
+    rescheduleAllNotifications(reminder.enabled, reminder.time, userName || 'friend', lastNotificationDate);
+  }, [reminder.enabled, reminder.time, userName]);
 
   const renderMoodSelection = () => (
     <Animated.View 
@@ -165,31 +243,21 @@ export default function CheckInScreen() {
           </Animated.Text>
         </Card>
       </Animated.View>
-      
-      <View style={styles.actionsContainer}>
-        <Button
-          title="Add a Note"
-          onPress={handleAddNote}
-          variant="tonal"
-          style={styles.actionButton}
-          icon={<MaterialIcons name="edit" size={24} color={colors.accent[40]} />}
-        />
-        
-        <Button
-          title="Save Moment"
-          onPress={handleSaveMoment}
-          style={styles.actionButton}
-          icon={<MaterialIcons name="send" size={24} color={colors.neutral[99]} />}
-        />
-        
-        <Button
-          title="Back"
-          onPress={handleCancel}
-          variant="text"
-          style={[styles.actionButton, styles.cancelButton]}
-          icon={<MaterialIcons name="arrow-back" size={24} color={colors.primary[40]} />}
-        />
-      </View>
+      {/* ActivitySelector integration */}
+      <ActivitySelector
+        moodValence={getMoodValence(currentMood)}
+        onSelectionChange={setSelectedActivities}
+        suggestions={[]}
+        onSave={handleSaveActivities}
+      />
+      {/* Remove Add a Note and Save Moment buttons from here, move to journal step */}
+      <Button
+        title="Back"
+        onPress={handleCancel}
+        variant="text"
+        style={{ ...styles.actionButton, ...styles.cancelButton }}
+        icon={<MaterialIcons name="arrow-back" size={24} color={colors.primary[40]} />}
+      />
     </Animated.View>
   );
 
@@ -254,6 +322,8 @@ export default function CheckInScreen() {
     </Animated.View>
   );
 
+  // Add a section at the bottom for reminder settings
+  // (REMOVED: now in Settings screen)
   return (
     <Animated.View 
       style={[styles.backgroundContainer, { backgroundColor: bgColor }]}
@@ -268,7 +338,6 @@ export default function CheckInScreen() {
           </View>
         </View>
       </ScrollView>
-      
       {showMilestone && (
         <MilestonePopup 
           milestone={showMilestone} 
@@ -277,6 +346,17 @@ export default function CheckInScreen() {
       )}
     </Animated.View>
   );
+}
+
+// Helper to parse HH:MM string to Date
+function parseTime(time: string) {
+  const [hour, minute] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hour);
+  date.setMinutes(minute);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+  return date;
 }
 
 const styles = StyleSheet.create({
@@ -391,5 +471,19 @@ const styles = StyleSheet.create({
   savedText: {
     textAlign: 'center',
     color: colors.text.secondary,
+  },
+  reminderSection: {
+    marginTop: 32,
+    padding: 16,
+    backgroundColor: colors.surface.container,
+    borderRadius: 16,
+    alignItems: 'flex-start',
+  },
+  reminderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginVertical: 8,
   },
 });

@@ -11,9 +11,10 @@ interface InsightCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   onShare?: () => void;
+  icon?: string;
 }
 
-function InsightCard({ title, children, style, onShare }: InsightCardProps) {
+function InsightCard({ title, children, style, onShare, icon }: InsightCardProps) {
   // Add animation for share button
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -30,7 +31,10 @@ function InsightCard({ title, children, style, onShare }: InsightCardProps) {
   return (
     <View style={[styles.card, style]}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.titleContainer}>
+          {icon && <Text style={styles.icon}>{icon}</Text>}
+          <Text style={styles.title}>{title}</Text>
+        </View>
         {onShare && (
           <Animated.View style={animatedStyle}>
             <TouchableOpacity
@@ -66,6 +70,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  icon: {
+    fontSize: 20,
+    marginRight: 8,
   },
   title: {
     ...typography.titleLarge,
