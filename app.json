@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mindful Moment",
     "slug": "mindful-moment-7y4ko4c",
-    "version": "1.1.3",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -24,7 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.arulsdk.mindfulmoment7y4ko4c",
-      "versionCode": 9,
+      "versionCode": 10,
       "edgeToEdgeEnabled": true
     },
     "web": {
