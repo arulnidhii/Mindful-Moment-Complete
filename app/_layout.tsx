@@ -12,7 +12,7 @@ import { useMoodStore } from "@/store/moodStore";
 import colors from "@/constants/colors";
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { initializeNotificationCallbacks } from "@/utils/notificationManager";
+import { initializeNotificationCallbacks, checkNotificationPermissions, rescheduleNotificationsOnStart } from "@/utils/notificationManager";
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -61,14 +61,37 @@ function RootLayoutNav() {
   useEffect(() => {
     // Initialize notification callbacks to break circular dependencies
     initializeNotificationCallbacks(useStreakStore, useMoodStore, useUserStore);
-  }, []);
+    
+    // Check notification permissions on app start
+    checkNotificationPermissions();
+    
+    // Reschedule notifications on app start
+    rescheduleNotificationsOnStart();
+    
+    // Handle initial navigation
+    const handleInitialNavigation = async () => {
+      try {
+        setTimeout(() => {
+          if (isOnboarded) {
+            router.replace('/(tabs)');
+          } else {
+            router.replace('/onboarding');
+          }
+        }, 100);
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback navigation
+        setTimeout(() => {
+          if (isOnboarded) {
+            router.replace('/(tabs)');
+          } else {
+            router.replace('/onboarding');
+          }
+        }, 200);
+      }
+    };
 
-  useEffect(() => {
-    if (isOnboarded) {
-      router.replace('/(tabs)');
-    } else {
-      router.replace('/onboarding');
-    }
+    handleInitialNavigation();
   }, [isOnboarded]);
 
   return (

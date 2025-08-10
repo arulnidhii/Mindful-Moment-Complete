@@ -1,17 +1,23 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '@/constants/colors';
 import { haptics } from '@/utils/haptics';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
-import { Pressable } from 'react-native';
+import { Pressable, AppState } from 'react-native';
 
-function TabBarButton({ children, onPress, ...props }) {
+interface TabBarButtonProps {
+  children: React.ReactNode;
+  onPress?: (e: any) => void;
+  [key: string]: any;
+}
+
+function TabBarButton({ children, onPress, ...props }: TabBarButtonProps) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-  const handlePress = (e) => {
+  const handlePress = (e: any) => {
     haptics.selection();
     scale.value = withTiming(0.92, { duration: 80 });
     setTimeout(() => {
@@ -29,6 +35,24 @@ function TabBarButton({ children, onPress, ...props }) {
 }
 
 export default function TabLayout() {
+  const router = useRouter();
+
+  // Optional: Reset to home tab when app comes back to foreground
+  // Uncomment the following useEffect if you want this behavior
+  /*
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'active') {
+        // Reset to home tab when app becomes active
+        router.replace('/(tabs)');
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [router]);
+  */
+
   return (
     <Tabs
       screenOptions={{

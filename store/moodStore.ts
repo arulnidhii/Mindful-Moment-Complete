@@ -9,6 +9,7 @@ import { useReminderStore } from './reminderStore';
 import { useUserStore } from './userStore';
 import { haptics } from '@/utils/haptics';
 import { completeInAppReview } from '@/utils/inAppReview';
+import { schedulePersonalizedNotification } from '@/utils/notifications';
 
 interface MoodState {
   entries: MoodEntry[];
@@ -101,8 +102,10 @@ export const useMoodStore = create<MoodState>()(
         // Provide success haptic feedback
         haptics.success();
         
+        const updatedEntries = [newEntry, ...entries];
+        
         set({ 
-          entries: [newEntry, ...entries],
+          entries: updatedEntries,
           currentMood: null,
           currentGuidance: null,
           journalNote: '',
@@ -110,8 +113,24 @@ export const useMoodStore = create<MoodState>()(
           drainers: []
         });
         
+        // Schedule personalized notification based on patterns
+        const { userName, lastNotificationDate } = useUserStore.getState();
+        try {
+          const personalizedResult = await schedulePersonalizedNotification(
+            updatedEntries, 
+            userName || 'friend', 
+            lastNotificationDate
+          );
+          
+          // Update last notification date if personalized notification was sent
+          if (personalizedResult) {
+            useUserStore.getState().setLastNotificationDate(personalizedResult.date);
+          }
+        } catch (error) {
+          console.error('Failed to schedule personalized notification:', error);
+        }
+        
         // Trigger in-app review after successful save
-        const updatedEntries = [newEntry, ...entries];
         const currentStreak = useStreakStore.getState().currentStreak;
         const { lastReviewDate, setLastReviewDate } = useUserStore.getState();
         

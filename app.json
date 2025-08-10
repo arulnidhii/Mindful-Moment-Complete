@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mindful Moment",
     "slug": "mindful-moment-7y4ko4c",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -18,14 +18,18 @@
       "bundleIdentifier": "app.rork.mindful-moment-7y4ko4c"
     },
     "android": {
-      "orientation": "default",
+      "package": "com.arulsdk.mindfulmoment7y4ko4c",
+      "versionCode": 11,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arulsdk.mindfulmoment7y4ko4c",
-      "versionCode": 10,
-      "edgeToEdgeEnabled": true
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -36,7 +40,18 @@
         {
           "origin": "https://rork.app/"
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

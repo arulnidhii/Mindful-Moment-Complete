@@ -9,20 +9,14 @@ import colors from '@/constants/colors';
 import typography from '@/constants/typography';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
+import { requestNotificationPermissions, checkNotificationPermissions } from '@/utils/notificationManager';
 
 const { width } = Dimensions.get('window');
-
-const predictions = [
-  { label: 'Uplifting', icon: '😊' },
-  { label: 'Balanced', icon: '🙂' },
-  { label: 'Challenging', icon: '😕' },
-];
 
 export default function OnboardingScreen() {
   const { setOnboarded, setUserName: setGlobalUserName, userName } = useUserStore();
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
-  const [prediction, setPrediction] = useState<string | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'idle' | 'granted' | 'denied'>('idle');
   const [nameError, setNameError] = useState('');
 
@@ -34,18 +28,23 @@ export default function OnboardingScreen() {
       }
     }
     setNameError('');
-    if (page < 4) {
+    if (page < 3) {
       pagerRef.current?.setPage(page + 1);
-    } else if (page === 4) {
+    } else if (page === 3) {
       setOnboarded(true);
     }
   };
 
   const requestNotificationPermission = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    setNotificationStatus(status === 'granted' ? 'granted' : 'denied');
-    if (status === 'granted') {
-      handleNext();
+    try {
+      const granted = await requestNotificationPermissions();
+      setNotificationStatus(granted ? 'granted' : 'denied');
+      if (granted) {
+        handleNext();
+      }
+    } catch (error) {
+      console.error('Error requesting notification permissions:', error);
+      setNotificationStatus('denied');
     }
   };
 
@@ -85,26 +84,8 @@ export default function OnboardingScreen() {
             This name is only used to personalize your experience. It never leaves your device.
           </Text>
         </View>
-        {/* Rhythm Prediction Screen */}
-        <View style={styles.page} key="3">
-          <Image source={require('@/assets/images/discovery-illustration.png')} style={styles.illustration} />
-          <Text style={styles.title}>Discover Your Rhythm</Text>
-          <Text style={styles.subtitle}>Let's start by setting a baseline. How do you predict your week will feel?</Text>
-          <View style={styles.predictionContainer}>
-            {predictions.map(({ label, icon }) => (
-              <TouchableOpacity
-                key={label}
-                style={[styles.predictionChip, prediction === label && styles.predictionChipSelected]}
-                onPress={() => setPrediction(label)}
-              >
-                <Text style={styles.predictionIcon}>{icon}</Text>
-                <Text style={styles.predictionLabel}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
         {/* Core Mechanics Screen */}
-        <View style={styles.page} key="4">
+        <View style={styles.page} key="3">
           <Image source={require('@/assets/images/benefits-illustration.png')} style={styles.illustration} />
           <Text style={styles.title}>Small Steps, Big Insights</Text>
           <Text style={styles.subtitle}>Each check-in helps you see patterns and celebrate progress.</Text>
@@ -124,7 +105,7 @@ export default function OnboardingScreen() {
           </View>
         </View>
         {/* Notification Permission Screen */}
-        <View style={styles.page} key="5">
+        <View style={styles.page} key="4">
           <Image source={require('@/assets/images/benefits-illustration.png')} style={styles.illustration} />
           <Text style={styles.title}>Stay Mindful, Effortlessly</Text>
           <Text style={styles.subtitle}>
@@ -141,11 +122,11 @@ export default function OnboardingScreen() {
         </View>
       </PagerView>
       <View style={styles.footer}>
-        <ProgressDots count={5} activeIndex={page} />
+        <ProgressDots count={4} activeIndex={page} />
         <Button
-          title={page < 4 ? (page === 3 ? 'Begin My Journey' : 'Continue') : 'Skip'}
+          title={page < 3 ? (page === 2 ? 'Begin My Journey' : 'Continue') : 'Skip'}
           onPress={handleNext}
-          disabled={page === 4 && notificationStatus === 'idle'}
+          disabled={page === 3 && notificationStatus === 'idle'}
         />
       </View>
     </SafeAreaView>
@@ -163,8 +144,9 @@ const styles = StyleSheet.create({
   page: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
     width: width,
+    minHeight: '100%',
   },
   logo: {
     width: 100,
@@ -172,9 +154,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   illustration: {
-    width: width * 0.7,
-    height: width * 0.7,
-    marginBottom: 40,
+    width: width * 0.6,
+    height: width * 0.6,
+    marginBottom: 32,
   },
   title: {
     ...typography.headlineSmall,
@@ -185,9 +167,10 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.bodyLarge,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
     color: colors.text.secondary,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    lineHeight: 24,
   },
   featureBox: {
     marginTop: 20,
@@ -199,34 +182,6 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.text.secondary,
     lineHeight: 24,
-  },
-  predictionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  predictionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: colors.surface.container,
-    marginHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  predictionChipSelected: {
-    borderColor: colors.primary[50],
-    backgroundColor: colors.primary[95],
-  },
-  predictionIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  predictionLabel: {
-    ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   mechanicsContainer: {
     marginTop: 20,

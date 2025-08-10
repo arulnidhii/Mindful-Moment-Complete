@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button as RNButton, Platform, Switch, Modal, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform as RNPlatform, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Switch, ScrollView, Alert, TextInput, Modal, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUserStore } from '@/store/userStore';
 import { useReminderStore } from '@/store/reminderStore';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { rescheduleAllNotifications } from '@/utils/notifications';
+import { requestNotificationPermissions } from '@/utils/notificationManager';
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
-import { Ionicons } from '@expo/vector-icons';
-import { Activity } from '@/constants/activities';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Button from '@/components/Button';
 
 const CUSTOM_TAGS_KEY = 'custom-activity-tags';
 
@@ -24,10 +26,10 @@ export default function SettingsScreen() {
   const [gentleEncouragementEnabled, setGentleEncouragementEnabled] = useState(true);
 
   // Custom Activities State
-  const [customBoosters, setCustomBoosters] = useState<Activity[]>([]);
-  const [customDrainers, setCustomDrainers] = useState<Activity[]>([]);
+  const [customBoosters, setCustomBoosters] = useState<any[]>([]);
+  const [customDrainers, setCustomDrainers] = useState<any[]>([]);
   const [showTagModal, setShowTagModal] = useState(false);
-  const [editingTag, setEditingTag] = useState<Activity | null>(null);
+  const [editingTag, setEditingTag] = useState<any | null>(null);
   const [tagType, setTagType] = useState<'booster' | 'drainer'>('booster');
   const [tagName, setTagName] = useState('');
   const [tagEmoji, setTagEmoji] = useState('✨');
@@ -66,7 +68,7 @@ export default function SettingsScreen() {
   }, []);
 
   // Save custom tags
-  const saveCustomTags = async (boosters: Activity[], drainers: Activity[]) => {
+  const saveCustomTags = async (boosters: any[], drainers: any[]) => {
     setCustomBoosters(boosters);
     setCustomDrainers(drainers);
     await AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify({ boosters, drainers }));
@@ -75,7 +77,7 @@ export default function SettingsScreen() {
   // Add or edit tag
   const handleSaveTag = () => {
     if (!tagName.trim()) return;
-    const newTag: Activity = {
+    const newTag: any = {
       id: tagName.trim().toLowerCase().replace(/\s+/g, '_'),
       name: tagName.trim(),
       emoji: tagEmoji,
@@ -106,7 +108,7 @@ export default function SettingsScreen() {
   };
 
   // Delete tag
-  const handleDeleteTag = (tag: Activity, type: 'booster' | 'drainer') => {
+  const handleDeleteTag = (tag: any, type: 'booster' | 'drainer') => {
     Alert.alert('Delete Tag', `Are you sure you want to delete "${tag.name}"?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => {
@@ -122,7 +124,7 @@ export default function SettingsScreen() {
   };
 
   // Open modal for add/edit
-  const openTagModal = (type: 'booster' | 'drainer', tag?: Activity) => {
+  const openTagModal = (type: 'booster' | 'drainer', tag?: any) => {
     setTagType(type);
     setEditingTag(tag || null);
     setTagName(tag ? tag.name : '');
@@ -131,7 +133,7 @@ export default function SettingsScreen() {
   };
 
   // Render tag pill
-  const renderTagPill = (tag: Activity, type: 'booster' | 'drainer') => (
+  const renderTagPill = (tag: any, type: 'booster' | 'drainer') => (
     <TouchableOpacity
       key={tag.id}
       style={[styles.tagPill, type === 'booster' ? styles.boosterPill : styles.drainerPill]}
@@ -160,14 +162,14 @@ export default function SettingsScreen() {
               maxLength={24}
               autoFocus
             />
-            <RNButton
+            <Button
               title="Save"
               onPress={() => {
                 setUserName(newName);
                 setEditingName(false);
               }}
             />
-            <RNButton
+            <Button
               title="Cancel"
               onPress={() => {
                 setNewName(userName);
@@ -178,7 +180,7 @@ export default function SettingsScreen() {
         ) : (
           <View style={styles.row}>
             <Text style={typography.bodyLarge}>{userName}</Text>
-            <RNButton title="Edit" onPress={() => setEditingName(true)} />
+            <Button title="Edit" onPress={() => setEditingName(true)} />
           </View>
         )}
       </View>
@@ -189,14 +191,14 @@ export default function SettingsScreen() {
           <Text style={typography.bodyMedium}>
             {reminder.enabled ? `Remind me at ${reminder.time}` : 'Reminders off'}
           </Text>
-          <RNButton
+          <Button
             title={reminder.enabled ? 'Disable' : 'Enable'}
             onPress={reminder.toggleEnabled}
           />
         </View>
         {reminder.enabled && (
           <View style={styles.row}>
-            <RNButton
+            <Button
               title="Change Time"
               onPress={() => setShowTimePicker(true)}
             />
@@ -260,6 +262,8 @@ export default function SettingsScreen() {
           <Text style={styles.addTagText}>Add Custom Drainer</Text>
         </TouchableOpacity>
       </View>
+      
+
       {/* Tag Modal */}
       <Modal
         visible={showTagModal}
@@ -268,7 +272,7 @@ export default function SettingsScreen() {
         onRequestClose={() => setShowTagModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={RNPlatform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
           <View style={styles.modalContent}>
@@ -518,5 +522,25 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontWeight: '600',
     fontSize: 15,
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  debugButtonText: {
+    fontSize: 15,
+    color: colors.primary[40],
+    marginLeft: 6,
   },
 }); 
