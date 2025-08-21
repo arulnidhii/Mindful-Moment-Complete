@@ -150,6 +150,7 @@ A privacy‑preserving, lightweight, and cost‑efficient system that transforms
 #### Individual Usage (100% On‑Device)
 
 ```mermaid
+
 flowchart LR
   subgraph Device["Your Device (On-Device Only)"]
     A[Mood Entries and Journal]
@@ -162,6 +163,7 @@ flowchart LR
   B --> D
   N["No network calls; data stays local"]
   Device --- N
+
 ```
 
 * Proprietary algorithms here:
@@ -173,6 +175,7 @@ flowchart LR
 #### Partner Connect (On‑Device Generation + Minimal Cloud Transport for connection purposes)
 
 ```mermaid
+
 flowchart LR
   subgraph Sender["Sender Device (On-Device Generation)"]
     A1[Mood Entries]
@@ -191,6 +194,7 @@ flowchart LR
   classDef cloud fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
   class Sender,Receiver local
   class Cloud cloud
+
 ```
 
 * Proprietary algorithms here:
