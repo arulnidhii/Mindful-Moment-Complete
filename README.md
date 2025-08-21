@@ -135,7 +135,9 @@ A privacy‑preserving, lightweight, and cost‑efficient system that transforms
 ### Privacy by Design — Data Flow Diagrams
 
 #### Individual Usage (100% On‑Device)
+
 ```mermaid
+
 flowchart LR
   subgraph Device["Your Device (On-Device Only)"]
     A[Mood Entries and Journal]
@@ -148,6 +150,7 @@ flowchart LR
   B --> D
   N["No network calls; data stays local"]
   Device --- N
+
 ```
 
 - Proprietary algorithms here:
@@ -156,6 +159,7 @@ flowchart LR
   - Notification scheduler adapts timing based on local patterns
 
 #### Partner Connect (On‑Device Generation + Minimal Cloud Transport for connection purposes)
+
 ```mermaid
 flowchart LR
   subgraph Sender["Sender Device (On-Device Generation)"]
