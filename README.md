@@ -137,11 +137,11 @@ A privacy‑preserving, lightweight, and cost‑efficient system that transforms
 #### Individual Usage (100% On‑Device)
 ```mermaid
 flowchart LR
-  subgraph Device["Your Device (On‑Device Only)"]
-    A[Mood Entries + Journal (AsyncStorage)]
-    B[Proprietary Pattern Engine\n(utils/patternEngine.ts)]
-    C[Insight Generation + Templates\n(src/lib/insightsEngine.ts)]
-    D[Notifications + Streaks]
+  subgraph Device["Your Device (On-Device Only)"]
+    A[Mood Entries and Journal]
+    B[Proprietary Pattern Engine]
+    C[Insight Generation and Templates]
+    D[Notifications and Streaks]
     E[Insights UI (Day/Week/Month)]
   end
   A --> B --> C --> E
@@ -158,17 +158,17 @@ flowchart LR
 #### Partner Connect (On‑Device Generation + Minimal Cloud Transport for connection purposes)
 ```mermaid
 flowchart LR
-  subgraph Sender["Sender Device (On‑Device Generation)"]
+  subgraph Sender["Sender Device (On-Device Generation)"]
     A1[Mood Entries]
     B1[Proprietary Pattern Engine]
-    C1[Curated Insight\n(type, text, emoji, highlights)]
+    C1[Curated Insight (type, text, emoji, highlights)]
   end
-  subgraph Cloud["Firestore (Transport + Minimal Storage)"]
-    D1[insights_daily YYYY-MM-DD\ncap 3 items; type-based replace; counts]
+  subgraph Cloud["Firestore (Transport and Minimal Storage)"]
+    D1[insights_daily YYYY-MM-DD (cap 3; type-based replace; counts)]
   end
-  subgraph Receiver["Partner Device (Read‑only)"]
-    E1[Realtime Listener\nusers/<uid>/insights_daily]
-    F1[Partner Tab UI\nDaily/Weekly/Monthly]
+  subgraph Receiver["Partner Device (Read-only)"]
+    E1[Realtime Listener users/<uid>/insights_daily]
+    F1[Partner Tab UI (Daily/Weekly/Monthly)]
   end
   A1 --> B1 --> C1 --> D1 --> E1 --> F1
   classDef local fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
