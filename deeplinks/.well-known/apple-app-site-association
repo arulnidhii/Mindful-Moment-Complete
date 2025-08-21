@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.app.rork.mindful-moment-7y4ko4c",
+        "paths": ["/connect/*"]
+      }
+    ]
+  }
+}

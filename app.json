@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.mindful-moment-7y4ko4c"
+      "bundleIdentifier": "app.rork.mindful-moment-7y4ko4c",
+      "associatedDomains": [
+        "applinks:app.quantifylabs.ai"
+      ]
     },
     "android": {
       "package": "com.arulsdk.mindfulmoment7y4ko4c",
@@ -24,6 +27,23 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.quantifylabs.ai",
+              "pathPrefix": "/connect"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "permissions": [
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.POST_NOTIFICATIONS",

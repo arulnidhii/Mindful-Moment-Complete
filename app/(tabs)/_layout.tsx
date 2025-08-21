@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text } from 'react-native';
 import colors from '@/constants/colors';
 import { haptics } from '@/utils/haptics';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
@@ -54,56 +55,65 @@ export default function TabLayout() {
   */
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary[40],
-        tabBarInactiveTintColor: colors.text.tertiary,
-        tabBarStyle: {
-          backgroundColor: colors.surface.container,
-          borderTopColor: 'rgba(0, 0, 0, 0.05)',
-          height: 64,
-          paddingBottom: 10,
-        },
-        headerStyle: {
-          backgroundColor: colors.surface.bright,
-        },
-        headerTitleStyle: {
-          fontWeight: '600',
-          color: colors.text.primary,
-        },
-        tabBarButton: (props) => <TabBarButton {...props} />,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Check In',
-          tabBarIcon: ({ color }) => <MaterialIcons name="mood" size={24} color={color} />,
+    <>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: colors.primary[40],
+          tabBarInactiveTintColor: colors.text.tertiary,
+          tabBarStyle: {
+            backgroundColor: colors.surface.container,
+            borderTopColor: 'rgba(0, 0, 0, 0.05)',
+            height: 64,
+            paddingBottom: 10,
+          },
+          headerStyle: {
+            backgroundColor: colors.surface.bright,
+          },
+          headerTitleStyle: {
+            fontWeight: '600',
+            color: colors.text.primary,
+          },
+          tabBarButton: (props) => <TabBarButton {...props} />,
         }}
-      />
-      
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: 'My Moments',
-          tabBarIcon: ({ color }) => <MaterialIcons name="history" size={24} color={color} />,
-        }}
-      />
-      
-      <Tabs.Screen
-        name="insights"
-        options={{
-          title: 'Insights',
-          tabBarIcon: ({ color }) => <MaterialIcons name="bar-chart" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Check In',
+            tabBarIcon: ({ color }) => <MaterialIcons name="mood" size={24} color={color} />,
+          }}
+        />
+        
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: 'My Moments',
+            tabBarIcon: ({ color }) => <MaterialIcons name="history" size={24} color={color} />,
+          }}
+        />
+        
+        <Tabs.Screen
+          name="insights"
+          options={{
+            title: 'Insights',
+            tabBarIcon: ({ color }) => <MaterialIcons name="bar-chart" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="partner"
+          options={{
+            title: 'Partner',
+            tabBarIcon: ({ color }) => <MaterialIcons name="people" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={24} color={color} />,
+          }}
+        />
+      </Tabs>
+    </>
   );
 }

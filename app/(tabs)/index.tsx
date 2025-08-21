@@ -29,6 +29,7 @@ import { rescheduleAllNotifications } from '@/utils/notifications';
 import { useUserStore } from '@/store/userStore';
 import { haptics } from '@/utils/haptics';
 import ActivitySelector from '@/components/ActivitySelector';
+import { scheduleMissedCheckIn, scheduleStreakCelebration } from '@/utils/notifications';
 
 export default function CheckInScreen() {
   const router = useRouter();
@@ -41,8 +42,12 @@ export default function CheckInScreen() {
     saveMoodEntry,
     clearCurrentEntry,
     setBoosters,
-    setDrainers
+    setDrainers,
+    setOnMilestoneAchieved
   } = useMoodStore();
+  
+  const { setOnStreakBreak } = useStreakStore();
+  const { userName, setLastNotificationDate } = useUserStore();
   
   const [step, setStep] = useState<'mood' | 'guidance' | 'journal' | 'saved'>(
     currentMood ? 'guidance' : 'mood'
@@ -56,10 +61,28 @@ export default function CheckInScreen() {
   const cardScale = useSharedValue(1);
   
   const reminder = useReminderStore();
-  const userName = useUserStore((state) => state.userName);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedActivities, setSelectedActivities] = useState<{ boosters: string[]; drainers: string[] }>({ boosters: [], drainers: [] });
   const [activitySelectorVisible, setActivitySelectorVisible] = useState(false);
+
+  // Set up notification callbacks when component mounts
+  useEffect(() => {
+    // Set up streak break callback
+    setOnStreakBreak(async () => {
+      const newDate = await scheduleMissedCheckIn(userName || 'friend', null);
+      if (newDate) {
+        setLastNotificationDate(newDate);
+      }
+    });
+    
+    // Set up milestone achieved callback
+    setOnMilestoneAchieved(async (milestone: string, streakDays: number) => {
+      const newDate = await scheduleStreakCelebration(streakDays, userName || 'friend', null);
+      if (newDate) {
+        setLastNotificationDate(newDate);
+      }
+    });
+  }, [setOnStreakBreak, setOnMilestoneAchieved, userName, setLastNotificationDate]);
 
   // Helper to determine mood valence
   const getMoodValence = (mood: string | null): 'positive' | 'negative' | 'neutral' => {

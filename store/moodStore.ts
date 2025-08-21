@@ -10,6 +10,7 @@ import { useUserStore } from './userStore';
 import { haptics } from '@/utils/haptics';
 import { completeInAppReview } from '@/utils/inAppReview';
 import { schedulePersonalizedNotification } from '@/utils/notifications';
+import { generateAndSendDailyPostcard } from '@/src/lib/partnerService';
 
 interface MoodState {
   entries: MoodEntry[];
@@ -143,6 +144,13 @@ export const useMoodStore = create<MoodState>()(
             setLastReviewDate
           );
         }, 1000);
+        
+        // Generate and send daily postcard to partner if connected
+        try {
+          await generateAndSendDailyPostcard(updatedEntries);
+        } catch (error) {
+          console.error('Failed to generate daily postcard:', error);
+        }
         
         return milestone;
       },
