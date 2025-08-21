@@ -137,14 +137,13 @@ A privacy‑preserving, lightweight, and cost‑efficient system that transforms
 #### Individual Usage (100% On‑Device)
 
 ```mermaid
-
 flowchart LR
   subgraph Device["Your Device (On-Device Only)"]
     A[Mood Entries and Journal]
     B[Proprietary Pattern Engine]
     C[Insight Generation and Templates]
     D[Notifications and Streaks]
-    E[Insights UI (Day/Week/Month)]
+    E[Insights UI – Day / Week / Month]
   end
   A --> B --> C --> E
   B --> D
