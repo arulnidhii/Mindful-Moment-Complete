@@ -61,7 +61,7 @@ const UnconnectedPartnerView = () => {
               <Button title="🔗 Share Invitation Link" onPress={handleShare} />
               <Button
                 title="Close"
-                variant="secondary"
+                variant="outlined"
                 onPress={() => setInvitation(null)}
                 style={{ marginTop: 10 }}
               />

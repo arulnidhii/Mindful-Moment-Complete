@@ -17,7 +17,7 @@ import { checkNotificationPermissions, rescheduleNotificationsOnStart } from "@/
 import * as Linking from 'expo-linking';
 import { auth, signIn, onAuthStateChanged } from '@/src/lib/firebase';
 import { listenForConnectionChanges } from '@/src/lib/partnerService';
-import { parseRequestIdFromUrl } from '@/src/utils/deeplinks';
+import { parseRequestIdFromUrl, parseInternalActionFromUrl } from '@/src/utils/deeplinks';
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -71,6 +71,18 @@ function RootLayoutNav() {
       const requestId = parseRequestIdFromUrl(url);
       if (requestId) {
         router.push(`/connect-partner?requestId=${requestId}`);
+        return;
+      }
+      const internal = parseInternalActionFromUrl(url)
+      if(internal?.action==='set-reminder'){
+        try{
+          const hour = parseInt(internal.params.hour||'22',10)
+          const minute = parseInt(internal.params.minute||'30',10)
+          const label = internal.params.label || 'Reminder'
+          // We can route to settings or schedule directly on next app open; for now, route to settings
+          router.push('/(tabs)/settings')
+          console.log('Set reminder requested via deep link', { hour, minute, label })
+        }catch(e){ console.warn('Failed to parse set-reminder deeplink', e) }
       }
     };
 

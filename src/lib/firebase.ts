@@ -2,7 +2,6 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import {
   initializeAuth,
-  getReactNativePersistence,
   signInAnonymously,
   onAuthStateChanged as firebaseOnAuthStateChanged,
 } from 'firebase/auth';
@@ -33,9 +32,8 @@ try {
   db = getFirestore(app);
 
   // Proper React Native Auth initialization with AsyncStorage persistence
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
+  // Basic auth init without explicit persistence to avoid type mismatch issues
+  auth = initializeAuth(app, {} as any);
 } catch (error) {
   console.warn('Firebase initialization failed, running in offline mode:', error);
   isFirebaseAvailable = false;

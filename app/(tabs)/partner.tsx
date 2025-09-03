@@ -44,7 +44,7 @@ const PartnerTab = () => {
 
   const periods: Array<'day'|'week'|'month'> = ['day','week','month'];
   const aggregated = selectedPeriod !== 'day'
-    ? aggregateForPeriod(days, selectedPeriod === 'week' ? 7 : 30, partner.name)
+    ? aggregateForPeriodByPeriod(days, selectedPeriod, partner.name)
     : [];
 
   const isEmptyDaily = (!USE_DAILY_ROLLUP ? postcards.length === 0 : days.length === 0);
@@ -82,13 +82,21 @@ const PartnerTab = () => {
     );
   } else {
     content = (
-      <FlatList
-        data={aggregated}
-        renderItem={({ item }) => <PostcardItem postcard={item} />}
-        keyExtractor={(_, idx) => `agg-${selectedPeriod}-${idx}`}
-        style={styles.list}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      />
+      <View>
+        {selectedPeriod==='week' && aggregated.length>0 && (
+          <View style={{ paddingVertical: 8 }}>
+            <Text style={[typography.titleMedium, { textAlign:'center', marginBottom: 6 }]}>For Us: This week</Text>
+            <Text style={[typography.bodyMedium, { textAlign:'center', color: colors.text.secondary }]}>{require('@/utils/partnerWeekly').computeWeeklyForUs(days, partner.name)}</Text>
+          </View>
+        )}
+        <FlatList
+          data={aggregated}
+          renderItem={({ item }) => <PostcardItem postcard={item} />}
+          keyExtractor={(_, idx) => `agg-${selectedPeriod}-${idx}`}
+          style={styles.list}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        />
+      </View>
     );
   }
 
@@ -169,6 +177,8 @@ const styles = StyleSheet.create({
   periodButtonText: {
     ...typography.labelLarge,
     color: colors.text.secondary,
+
+
     fontWeight: '600',
   },
   periodButtonTextSelected: {
@@ -180,40 +190,60 @@ export default PartnerTab;
 
 // Aggregation helper: produce actionable weekly/monthly items from daily rollups
 const parseDate = (s: string) => new Date(`${s}T00:00:00Z`).getTime();
-const aggregateForPeriod = (
-  days: DailyInsightsDay[], windowDays: number, partnerName: string
+const aggregateForPeriodByPeriod = (
+  days: DailyInsightsDay[], period: 'week'|'month', partnerName: string
 ): { emoji: string; text: string; highlights?: string[] }[] => {
   if (!Array.isArray(days) || days.length === 0) return [];
-  const now = Date.now();
-  const cutoff = now - windowDays * 24 * 60 * 60 * 1000;
-  const within = days.filter(d => parseDate(d.date) >= cutoff);
-  if (within.length === 0) return [];
 
-  const totalCounts: Record<string, number> = {};
-  within.forEach(d => {
-    Object.entries(d.counts || {}).forEach(([k, v]) => {
-      totalCounts[k] = (totalCounts[k] || 0) + (v as number);
+  // Canonical ranges via periodAgg
+  const { getPeriodRange } = require('@/utils/advisor/periodAgg');
+  const rCurr = getPeriodRange(period, new Date());
+  const prevAnchor = new Date();
+  if(period==='week') prevAnchor.setDate(prevAnchor.getDate()-7); else prevAnchor.setMonth(prevAnchor.getMonth()-1);
+  const rPrev = getPeriodRange(period, prevAnchor);
+
+  const within = (ts:number, r:any)=> ts>=r.start && ts<=r.end
+  const curr = days.filter(d => within(parseDate(d.date), rCurr));
+  const prev = days.filter(d => within(parseDate(d.date), rPrev));
+  if (curr.length === 0) return [];
+
+  const sumCounts = (set: DailyInsightsDay[]) => {
+    const totals: Record<string, number> = {};
+    set.forEach(d => {
+      Object.entries(d.counts || {}).forEach(([k, v]) => {
+        totals[k] = (totals[k] || 0) + (v as number);
+      });
     });
-  });
+    return totals;
+  };
 
+  const totalCurr = sumCounts(curr);
+  const totalPrev = sumCounts(prev);
+
+  const delta = (k: string) => (totalCurr[k] || 0) - (totalPrev[k] || 0);
+  const sign = (x: number) => (x >= 0 ? '+' : '−');
+  const abs = (x: number) => Math.abs(x);
+
+  // Representative items for copy variety (not duplicating Day)
   const representative: Record<string, any> = {};
-  for (const d of within) {
+  for (const d of curr) {
     for (const it of d.items || []) {
       if (!representative[it.type]) representative[it.type] = it;
     }
   }
 
+  const scope = period === 'week' ? 'This week' : 'This month';
   const parts: string[] = [];
-  if (totalCounts['mood_booster']) parts.push(`${totalCounts['mood_booster']} uplifting moments`);
-  if (totalCounts['gentle_nudge']) parts.push(`${totalCounts['gentle_nudge']} gentle check-ins`);
-  if (totalCounts['rhythm_note']) parts.push(`a pattern note`);
-  const scope = windowDays === 7 ? 'This week' : 'This month';
+  if (totalCurr['mood_booster']) parts.push(`${totalCurr['mood_booster']} uplifting moments (${sign(delta('mood_booster'))}${abs(delta('mood_booster'))} vs last ${period})`);
+  if (totalCurr['gentle_nudge']) parts.push(`${totalCurr['gentle_nudge']} gentle check-ins (${sign(delta('gentle_nudge'))}${abs(delta('gentle_nudge'))} vs last ${period})`);
+  if (totalCurr['rhythm_note']) parts.push(`a pattern note`);
+
   const summary = parts.length > 0
     ? `${scope}, ${partnerName} had ${parts.join(', ')}.`
     : `${scope}, ${partnerName} logged mindful moments.`;
 
   const out: { emoji: string; text: string; highlights?: string[] }[] = [
-    { emoji: '📅', text: summary, highlights: [String(totalCounts['mood_booster']||''), String(totalCounts['gentle_nudge']||'')] }
+    { emoji: '📅', text: summary }
   ];
 
   (['mood_booster','gentle_nudge','rhythm_note'] as const).forEach(t => {

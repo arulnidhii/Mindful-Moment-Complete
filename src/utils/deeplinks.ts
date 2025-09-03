@@ -52,3 +52,19 @@ export const parseRequestIdFromUrl = (url: string): string | null => {
   }
   return null;
 };
+
+
+// Parse internal app actions like myapp://set-reminder?hour=22&minute=30&label=...
+export const parseInternalActionFromUrl = (url: string): { action: 'set-reminder'; params: Record<string,string> } | null => {
+  try{
+    if(!url.startsWith('myapp://')) return null
+    const u = new URL(url)
+    const host = u.host || u.pathname.replace(/^\//,'')
+    if(host === 'set-reminder' || u.pathname.replace(/^\//,'') === 'set-reminder'){
+      const params: Record<string,string> = {}
+      u.searchParams.forEach((v,k)=>{ params[k]=v })
+      return { action: 'set-reminder', params }
+    }
+  }catch{}
+  return null
+}

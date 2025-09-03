@@ -5,6 +5,8 @@ import typography from '@/constants/typography';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, withTiming, withSequence, useAnimatedStyle } from 'react-native-reanimated';
 import { haptics } from '@/utils/haptics';
+import ActionButtons from '@/components/ActionButtons';
+import type { Action } from '@/utils/advisor/advisorTypes';
 
 interface InsightCardProps {
   title: string;
@@ -12,9 +14,10 @@ interface InsightCardProps {
   style?: ViewStyle;
   onShare?: () => void;
   icon?: string;
+  actions?: Action[];
 }
 
-function InsightCard({ title, children, style, onShare, icon }: InsightCardProps) {
+function InsightCard({ title, children, style, onShare, icon, actions }: InsightCardProps) {
   // Add animation for share button
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -49,6 +52,11 @@ function InsightCard({ title, children, style, onShare, icon }: InsightCardProps
         )}
       </View>
       <View style={styles.content}>{children}</View>
+      {actions && actions.length>0 && (
+        <View style={{ marginTop: 12 }}>
+          <ActionButtons actions={actions} />
+        </View>
+      )}
     </View>
   );
 }

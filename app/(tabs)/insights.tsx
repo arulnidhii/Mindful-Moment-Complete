@@ -18,6 +18,8 @@ import { haptics } from '@/utils/haptics';
 import Animated, { FadeIn, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { getFreshInsights, InsightCard as DynamicInsightCard } from '@/utils/patternEngine';
 import { HighlightedText } from '@/components/HighlightedText';
+import { useAdvisorFlag } from '@/utils/featureFlags';
+import { buildAdvisorItemsAsync } from '@/utils/advisor/buildAdvisor';
 
 export default function InsightsScreen() {
   const entries = useMoodStore((state) => state.entries);
@@ -40,15 +42,16 @@ export default function InsightsScreen() {
       weekData: [],
       monthData: [],
     };
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    // Day: only today
-    const dayEntries = entries.filter(entry => format(new Date(String(entry.timestamp)).toISOString()) === todayKey);
-    // Week: last 7 days
-    const weekEntries = entries.filter(entry => new Date(String(entry.timestamp)) >= weekAgo);
-    // Month: last 30 days
-    const monthEntries = entries.filter(entry => new Date(String(entry.timestamp)) >= monthAgo);
+    // Use canonical period ranges (ISO week, calendar month)
+    const { getPeriodRange } = require('@/utils/advisor/periodAgg');
+    const dayRange = getPeriodRange('day', new Date());
+    const weekRange = getPeriodRange('week', new Date());
+    const monthRange = getPeriodRange('month', new Date());
+    const within = (ts: number, r: any) => ts >= r.start && ts <= r.end;
+
+    const dayEntries = entries.filter(entry => within(new Date(String(entry.timestamp)).getTime(), dayRange));
+    const weekEntries = entries.filter(entry => within(new Date(String(entry.timestamp)).getTime(), weekRange));
+    const monthEntries = entries.filter(entry => within(new Date(String(entry.timestamp)).getTime(), monthRange));
     return {
       dayData: processEntriesByCount(dayEntries),
       weekData: processEntriesByCount(weekEntries),
@@ -62,6 +65,23 @@ export default function InsightsScreen() {
     if (selectedPeriod === 'week') return processedData.weekData;
     return processedData.monthData;
   };
+
+  const { enabled: advisorEnabled } = useAdvisorFlag();
+  // Advisor items per selected period (feature-flagged)
+  const [advisorItems, setAdvisorItems] = useState<any[]>([])
+  React.useEffect(()=>{
+    let mounted = true
+    ;(async()=>{
+      if (!advisorEnabled) { setAdvisorItems([]); return }
+      const { getPeriodRange } = require('@/utils/advisor/periodAgg');
+      const range = getPeriodRange(selectedPeriod, new Date());
+      const within = (ts: number, r: any) => ts >= r.start && ts <= r.end;
+      const periodEntries = entries.filter(entry => within(new Date(String(entry.timestamp)).getTime(), range));
+      const built = await buildAdvisorItemsAsync(periodEntries as any[], selectedPeriod)
+      if(mounted) setAdvisorItems(built)
+    })()
+    return ()=>{ mounted=false }
+  }, [entries, selectedPeriod, todayKey, advisorEnabled])
 
   // Modern, short caption for the share card
   const getShareCaption = () => {
@@ -204,11 +224,31 @@ export default function InsightsScreen() {
               <DailyRhythm entries={entries} />
             </InsightCard>
           </Animated.View>
+          {/* Advisor Feed (Phase 1) */}
+          {advisorEnabled && advisorItems.length > 0 && (
+            <>
+              {advisorItems.map((item) => (
+                <Animated.View key={item.id} entering={FadeIn.duration(400)}>
+                  <InsightCard title={item.title} actions={item.actions}>
+                    <Text style={typography.bodyMedium}>{item.text}</Text>
+                    {item.tips?.length > 0 && (
+                      <View style={{ marginTop: 8 }}>
+                        {item.tips.slice(0,2).map((t: any, idx: number) => (
+                          <Text key={`${item.id}-tip-${idx}`} style={[typography.bodySmall, { opacity: 0.9 }]}>• {typeof t.text === 'string' ? t.text : ''}</Text>
+                        ))}
+                      </View>
+                    )}
+                  </InsightCard>
+                </Animated.View>
+              ))}
+            </>
+          )}
+
           {/* Dynamic Insights Section */}
           {dynamicInsights.length > 0 ? (
             dynamicInsights.map((insight, idx) => (
               <Animated.View key={insight.id} entering={FadeIn.duration(400)}>
-                <InsightCard 
+                <InsightCard
                   title={insight.title}
                   icon={insight.icon}
                   onShare={insight.title === 'Your Patterns' ? () => { haptics.selection(); handleSharePatterns(); } : undefined}

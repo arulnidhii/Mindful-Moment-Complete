@@ -6,7 +6,7 @@ import colors from '@/constants/colors';
 import typography from '@/constants/typography';
 import { MoodEntry } from '@/types/mood';
 import { format } from '@/utils/dateFormatter';
-import { CheckCircle, Circle, Trash2, Clock, MessageSquare } from 'lucide-react-native';
+// Removed lucide-react-native to avoid extra dependency; using MaterialIcons instead
 import { haptics } from '@/utils/haptics';
 import Animated, { 
   FadeOut, 
@@ -120,7 +120,7 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({
           style={[
             styles.entryCard, 
             isSelected && { borderColor: colors.primary[40], borderWidth: 2 }
-          ]} 
+          ] as any}
           elevation={isSelected ? 2 : 1}
           onPress={handlePress}
         >

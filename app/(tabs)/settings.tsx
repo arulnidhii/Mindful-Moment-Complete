@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUserStore } from '@/store/userStore';
 import { useReminderStore } from '@/store/reminderStore';
-import { rescheduleAllNotifications } from '@/utils/notifications';
-import { requestNotificationPermissions } from '@/utils/notificationManager';
+
 import colors from '@/constants/colors';
 import typography from '@/constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '@/components/Button';
+import { useAdvisorFlag } from '@/utils/featureFlags';
+
+import LabsToneSelector from '@/app/components/LabsToneSelector';
 
 const CUSTOM_TAGS_KEY = 'custom-activity-tags';
 
@@ -184,6 +186,8 @@ export default function SettingsScreen() {
           </View>
         )}
       </View>
+      {/* Partner Phone */}
+      <PartnerPhoneSection />
       {/* Reminder Settings */}
       <View style={styles.section}>
         <Text style={typography.titleMedium}>Daily Reminder</Text>
@@ -239,6 +243,15 @@ export default function SettingsScreen() {
           />
         </View>
       </View>
+
+      {/* Labs */}
+      <View style={styles.section}>
+        <Text style={typography.titleMedium}>Labs</Text>
+        <LabsAdvisorToggle />
+        <LabsToneSelector />
+      </View>
+
+
       {/* Custom Activities Section */}
       <View style={styles.section}>
         <Text style={typography.titleMedium}>Custom Activities</Text>
@@ -262,7 +275,7 @@ export default function SettingsScreen() {
           <Text style={styles.addTagText}>Add Custom Drainer</Text>
         </TouchableOpacity>
       </View>
-      
+
 
       {/* Tag Modal */}
       <Modal
@@ -537,10 +550,50 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
+
   },
   debugButtonText: {
     fontSize: 15,
     color: colors.primary[40],
     marginLeft: 6,
   },
-}); 
+});
+
+function LabsAdvisorToggle(){
+  const { enabled, setEnabled } = useAdvisorFlag()
+  return (
+    <View style={{ flexDirection:'row', alignItems:'center', justifyContent:'space-between' }}>
+      <Text style={typography.bodyMedium}>Advisor Feed</Text>
+      <Switch value={enabled} onValueChange={setEnabled} />
+    </View>
+  )
+}
+
+function PartnerPhoneSection(){
+  const partnerPhoneNumber = useUserStore(state=> state.partnerPhoneNumber)
+  const setPartnerPhoneNumber = useUserStore(state=> state.setPartnerPhoneNumber)
+  const [value, setValue] = useState(partnerPhoneNumber||'')
+  return (
+    <View style={styles.section}>
+      <Text style={typography.titleMedium}>Partner Phone (local only)</Text>
+      <Text style={{ ...typography.bodySmall, color: colors.text.secondary, marginBottom: 8 }}>
+        Stored only on your device to enable quick actions (call/message). Not uploaded.
+      </Text>
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.nameInput, { flex: 1 }]}
+          placeholder="e.g. +1234567890"
+          keyboardType="phone-pad"
+          value={value}
+          onChangeText={setValue}
+        />
+        <Button title="Save" onPress={()=> setPartnerPhoneNumber(value.trim()||null)} />
+      </View>
+      {partnerPhoneNumber ? (
+        <Text style={typography.bodySmall}>Saved: {partnerPhoneNumber}</Text>
+      ) : (
+        <Text style={typography.bodySmall}>No number saved yet</Text>
+      )}
+    </View>
+  )
+}

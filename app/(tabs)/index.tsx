@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, Platform, Button as RNButton, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView, Platform, Button as RNButton, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -13,10 +13,10 @@ import { useStreakStore } from '@/store/streakStore';
 import { useReminderStore } from '@/store/reminderStore';
 import * as Notifications from 'expo-notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import Animated, { 
-  FadeIn, 
-  FadeOut, 
-  SlideInRight, 
+import Animated, {
+  FadeIn,
+  FadeOut,
+  SlideInRight,
   SlideOutLeft,
   useAnimatedStyle,
   useSharedValue,
@@ -30,12 +30,18 @@ import { useUserStore } from '@/store/userStore';
 import { haptics } from '@/utils/haptics';
 import ActivitySelector from '@/components/ActivitySelector';
 import { scheduleMissedCheckIn, scheduleStreakCelebration } from '@/utils/notifications';
+import InsightCard from '@/components/InsightCard';
+import { buildAdvisorItemsAsync } from '@/utils/advisor/buildAdvisor';
+import { format } from '@/utils/dateFormatter';
+import TodayChips from '@/components/TodayChips';
+import { useAdvisorFlag } from '@/utils/featureFlags';
+import { recordHelpful, recordNotHelpful } from '@/utils/advisor/feedback';
 
 export default function CheckInScreen() {
   const router = useRouter();
-  const { 
-    currentMood, 
-    currentGuidance, 
+  const {
+    currentMood,
+    currentGuidance,
     journalNote,
     setCurrentMood,
     setJournalNote,
@@ -45,21 +51,21 @@ export default function CheckInScreen() {
     setDrainers,
     setOnMilestoneAchieved
   } = useMoodStore();
-  
+
   const { setOnStreakBreak } = useStreakStore();
   const { userName, setLastNotificationDate } = useUserStore();
-  
+
   const [step, setStep] = useState<'mood' | 'guidance' | 'journal' | 'saved'>(
     currentMood ? 'guidance' : 'mood'
   );
-  
+
   const [bgColor, setBgColor] = useState<string>(colors.surface.bright);
   const [showMilestone, setShowMilestone] = useState<string | null>(null);
-  
+
   // Animation values
   const textOpacity = useSharedValue(0);
   const cardScale = useSharedValue(1);
-  
+
   const reminder = useReminderStore();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedActivities, setSelectedActivities] = useState<{ boosters: string[]; drainers: string[] }>({ boosters: [], drainers: [] });
@@ -74,7 +80,7 @@ export default function CheckInScreen() {
         setLastNotificationDate(newDate);
       }
     });
-    
+
     // Set up milestone achieved callback
     setOnMilestoneAchieved(async (milestone: string, streakDays: number) => {
       const newDate = await scheduleStreakCelebration(streakDays, userName || 'friend', null);
@@ -94,14 +100,14 @@ export default function CheckInScreen() {
 
   const handleMoodSelect = (mood: string) => {
     haptics.selection();
-    
+
     // Set background color based on mood
     const moodColors = colors.mood[mood as keyof typeof colors.mood];
     setBgColor(moodColors.container);
-    
+
     setCurrentMood(mood);
     setStep('guidance');
-    
+
     // Animate the guidance text
     textOpacity.value = 0;
     setTimeout(() => {
@@ -115,16 +121,16 @@ export default function CheckInScreen() {
       withTiming(1.05, { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
       withTiming(1, { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
     );
-    
+
     // Set boosters and drainers in the store
     setBoosters(selectedActivities.boosters);
     setDrainers(selectedActivities.drainers);
 
     // Save the entry and check for milestones
     const milestone = await saveMoodEntry();
-    
+
     setStep('saved');
-    
+
     // If a milestone was achieved, show the popup
     if (milestone) {
       setTimeout(() => {
@@ -150,7 +156,7 @@ export default function CheckInScreen() {
     setStep('mood');
     setBgColor(colors.surface.bright);
   };
-  
+
   const handleCloseMilestone = () => {
     setShowMilestone(null);
     setStep('mood');
@@ -161,20 +167,20 @@ export default function CheckInScreen() {
     setActivitySelectorVisible(false);
     setStep('journal');
   };
-  
+
   // Reset background color when returning to mood selection
   useEffect(() => {
     if (step === 'mood') {
       setBgColor(colors.surface.bright);
     }
   }, [step]);
-  
+
   const animatedTextStyle = useAnimatedStyle(() => {
     return {
       opacity: textOpacity.value
     };
   });
-  
+
   const animatedCardStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: cardScale.value }]
@@ -202,7 +208,7 @@ export default function CheckInScreen() {
             weekday: getWeekdayNumber(day),
             hour,
             minute,
-          },
+          } as any,
         });
       }
     });
@@ -229,7 +235,7 @@ export default function CheckInScreen() {
   }, [reminder.enabled, reminder.time, userName]);
 
   const renderMoodSelection = () => (
-    <Animated.View 
+    <Animated.View
       style={styles.moodContainer}
       entering={FadeIn.duration(400)}
       exiting={FadeOut.duration(200)}
@@ -252,14 +258,14 @@ export default function CheckInScreen() {
   );
 
   const renderGuidance = () => (
-    <Animated.View 
+    <Animated.View
       style={styles.guidanceContainer}
       entering={SlideInRight.duration(400)}
       exiting={SlideOutLeft.duration(200)}
     >
       <Animated.View style={animatedCardStyle}>
         <Card style={styles.guidanceCard} elevation={3}>
-          <Animated.Text 
+          <Animated.Text
             style={[typography.bodyLarge, styles.guidanceText, animatedTextStyle]}
           >
             {currentGuidance}
@@ -285,7 +291,7 @@ export default function CheckInScreen() {
   );
 
   const renderJournal = () => (
-    <Animated.View 
+    <Animated.View
       style={styles.journalContainer}
       entering={SlideInRight.duration(400)}
       exiting={SlideOutLeft.duration(200)}
@@ -293,7 +299,7 @@ export default function CheckInScreen() {
       <Text style={[typography.titleLarge, styles.journalTitle]}>
         A quick thought about this moment
       </Text>
-      
+
       <TextInput
         style={styles.journalInput}
         placeholder="e.g., Feeling content after a walk..."
@@ -303,11 +309,11 @@ export default function CheckInScreen() {
         multiline
         maxLength={150}
       />
-      
+
       <Text style={styles.characterCount}>
         {journalNote.length}/150
       </Text>
-      
+
       <View style={styles.actionsContainer}>
         <Button
           title="Save Moment"
@@ -315,7 +321,7 @@ export default function CheckInScreen() {
           style={styles.actionButton}
           icon={<MaterialIcons name="send" size={24} color={colors.neutral[99]} />}
         />
-        
+
         <Button
           title="Back"
           onPress={() => {
@@ -331,14 +337,14 @@ export default function CheckInScreen() {
   );
 
   const renderSaved = () => (
-    <Animated.View 
+    <Animated.View
       style={styles.savedContainer}
       entering={FadeIn.duration(400)}
     >
       <Text style={[typography.headlineMedium, styles.savedTitle]}>
         Moment Saved!
       </Text>
-      
+
       <Text style={[typography.bodyMedium, styles.savedText]}>
         Your mindful moment has been recorded.
       </Text>
@@ -348,22 +354,289 @@ export default function CheckInScreen() {
   // Add a section at the bottom for reminder settings
   // (REMOVED: now in Settings screen)
   return (
-    <Animated.View 
+    <Animated.View
       style={[styles.backgroundContainer, { backgroundColor: bgColor }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+
+            {/* Gentle habit nudge (in‑app, non‑notification) */}
+            {(() => {
+              const React = require('react') as typeof import('react')
+              const entries = useMoodStore.getState().entries
+              const todayStr = format(new Date().toISOString())
+              const hasToday = entries.some((e:any)=> format(new Date(String(e.timestamp)).toISOString())===todayStr)
+              const hour = new Date().getHours()
+              const streak = require('@/store/streakStore').useStreakStore.getState().currentStreak
+              const show = !hasToday && hour>=15 && streak<3
+              if(!show) return null
+              return (
+                <View style={{ width:'100%', marginBottom: 8 }}>
+                  <InsightCard title="Keep your streak warm">
+                    <Text style={typography.bodyMedium}>A 10‑second check‑in now helps build your rhythm. You’ve got this.</Text>
+                  </InsightCard>
+                </View>
+              )
+            })()}
+
+            {/* Partner Onboarding Preview Banner */}
+            {(() => {
+              const React = require('react') as typeof import('react')
+              const { usePartnerStore } = require('@/src/state/partnerStore')
+              const partner = usePartnerStore.getState().partner
+              const entries = useMoodStore.getState().entries
+              const show = !partner && entries.length >= 2
+              
+              // Mark partnerPreview milestone when shown
+              React.useEffect(() => {
+                if (show) {
+                  (async () => {
+                    const trial = await import('@/utils/trial')
+                    await trial.setMilestone('partnerPreview', true)
+                  })()
+                }
+              }, [show])
+              
+              if(!show) return null
+              
+              // Calculate week-over-week data
+              const now = new Date()
+              const currentWeekStart = new Date(now)
+              currentWeekStart.setDate(now.getDate() - now.getDay() + 1) // Monday
+              currentWeekStart.setHours(0, 0, 0, 0)
+              
+              const lastWeekStart = new Date(currentWeekStart)
+              lastWeekStart.setDate(lastWeekStart.getDate() - 7)
+              
+              const currentWeekEntries = entries.filter(e => {
+                const entryDate = new Date(String(e.timestamp))
+                return entryDate >= currentWeekStart && entryDate <= now
+              })
+              
+              const lastWeekEntries = entries.filter(e => {
+                const entryDate = new Date(String(e.timestamp))
+                return entryDate >= lastWeekStart && entryDate < currentWeekStart
+              })
+              
+              const currentCount = currentWeekEntries.length
+              const lastCount = lastWeekEntries.length
+              const delta = currentCount - lastCount
+              const sign = delta >= 0 ? '+' : '−'
+              
+              return (
+                <View style={{ width:'100%', marginBottom: 8 }}>
+                  <InsightCard title="Ready to share your journey?">
+                    <Text style={typography.bodyMedium}>
+                      This week you logged {currentCount} moments ({sign}{Math.abs(delta)} vs last week)
+                    </Text>
+                    <Text style={[typography.bodySmall, { marginTop: 8, color: colors.text.secondary }]}>
+                      • See weekly patterns together{'\n'}
+                      • Celebrate shared wins{'\n'}
+                      • Support each other's growth
+                    </Text>
+                    <TouchableOpacity 
+                      style={{ 
+                        backgroundColor: colors.primary[40], 
+                        paddingHorizontal: 16, 
+                        paddingVertical: 8, 
+                        borderRadius: 8, 
+                        alignSelf: 'flex-start',
+                        marginTop: 12
+                      }}
+                      onPress={() => router.push('/connect-partner')}
+                    >
+                      <Text style={[typography.bodyMedium, { color: colors.neutral[99], fontWeight: '600' }]}>
+                        Invite now
+                      </Text>
+                    </TouchableOpacity>
+                  </InsightCard>
+                </View>
+              )
+            })()}
+
+            {/* Trial Milestones Banner */}
+            {(() => {
+              const React = require('react') as typeof import('react')
+              const [milestones, setMilestones] = React.useState({ aha: false, partnerPreview: false, weeklyInsight: false })
+              const [isInTrial, setIsInTrial] = React.useState(true)
+              
+              React.useEffect(() => {
+                (async () => {
+                  const trial = await import('@/utils/trial')
+                  await trial.ensureTrialStart()
+                  const trialStatus = await trial.isInTrial(14)
+                  const milestoneData = await trial.getMilestones()
+                  setIsInTrial(trialStatus)
+                  setMilestones(milestoneData)
+                  
+                  // Mark weeklyInsight milestone if user has been using app for 10+ days and has weekly data
+                  if (trialStatus && milestoneData.aha && milestoneData.partnerPreview) {
+                    const start = await trial.getTrialStart()
+                    const daysSinceStart = (Date.now() - start) / (24 * 3600 * 1000)
+                    const currentEntries = useMoodStore.getState().entries
+                    if (daysSinceStart >= 10 && currentEntries.length >= 7) {
+                      await trial.setMilestone('weeklyInsight', true)
+                      setMilestones(prev => ({ ...prev, weeklyInsight: true }))
+                    }
+                  }
+                })()
+              }, [])
+              
+              if (!isInTrial) return null
+              
+              return (
+                <View style={{ width:'100%', marginBottom: 8 }}>
+                  <InsightCard title="Trial: Unlock your first wins">
+                    <View style={{ gap: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ 
+                          width: 20, 
+                          height: 20, 
+                          borderRadius: 10, 
+                          backgroundColor: milestones.aha ? colors.primary[40] : colors.surface.container,
+                          borderWidth: 2,
+                          borderColor: milestones.aha ? colors.primary[40] : colors.outline,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}>
+                          {milestones.aha && (
+                            <Text style={{ color: colors.neutral[99], fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                          )}
+                        </View>
+                        <Text style={typography.bodyMedium}>Aha tip by Day 2</Text>
+                      </View>
+                      
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ 
+                          width: 20, 
+                          height: 20, 
+                          borderRadius: 10, 
+                          backgroundColor: milestones.partnerPreview ? colors.primary[40] : colors.surface.container,
+                          borderWidth: 2,
+                          borderColor: milestones.partnerPreview ? colors.primary[40] : colors.outline,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}>
+                          {milestones.partnerPreview && (
+                            <Text style={{ color: colors.neutral[99], fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                          )}
+                        </View>
+                        <Text style={typography.bodyMedium}>Partner preview by Day 5</Text>
+                      </View>
+                      
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ 
+                          width: 20, 
+                          height: 20, 
+                          borderRadius: 10, 
+                          backgroundColor: milestones.weeklyInsight ? colors.primary[40] : colors.surface.container,
+                          borderWidth: 2,
+                          borderColor: milestones.weeklyInsight ? colors.primary[40] : colors.outline,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}>
+                          {milestones.weeklyInsight && (
+                            <Text style={{ color: colors.neutral[99], fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                          )}
+                        </View>
+                        <Text style={typography.bodyMedium}>Weekly insight by Day 10</Text>
+                      </View>
+                    </View>
+                  </InsightCard>
+                </View>
+              )
+            })()}
+
         <View style={styles.container}>
           <View style={styles.content}>
+            <TodayChips entries={useMoodStore.getState().entries} />
             {step === 'mood' && renderMoodSelection()}
             {step === 'guidance' && renderGuidance()}
             {step === 'journal' && renderJournal()}
             {step === 'saved' && renderSaved()}
+
+            {useAdvisorFlag().enabled && (
+              <View style={{ width: '100%' }}>
+                <InsightCard title="Advisor">
+                  {(() => {
+                    const today = format(new Date().toISOString());
+                    const currentEntries = useMoodStore.getState().entries;
+                    const todays = currentEntries.filter((entry: any) => format(new Date(String(entry.timestamp)).toISOString()) === today);
+                    // Use queue: if empty, generate and save; then read from queue
+                    const [items, setItems] = React.useState<any[]>([]);
+                    const [showMore, setShowMore] = React.useState(false);
+                    React.useEffect(()=>{
+                      (async()=>{
+                        const { getTodayItems, saveTodayItems } = await import('@/utils/advisor/queue');
+                        let current = await getTodayItems();
+                        if(current.length===0){
+                          const built = await buildAdvisorItemsAsync(todays as any[], 'day');
+                          if(built.length>0){
+                            await saveTodayItems(built)
+                            current = built
+                          }
+                        }
+                        setItems(current.slice(0,3))
+                      })()
+                    // eslint-disable-next-line react-hooks/exhaustive-deps
+                    }, [today, currentEntries.length])
+
+                    if (items.length === 0) {
+                      return <Text style={typography.bodyMedium}>Come back later today for a fresh tip.</Text>;
+                    }
+                    
+                    const displayItems = showMore ? items.slice(0, 3) : items.slice(0, 1);
+                    const hasMore = items.length > 1;
+                    
+                    return (
+                      <View style={{ gap: 8 }}>
+                        {displayItems.map((i: any) => (
+                          <View key={i.id}>
+                            <Text style={typography.bodyMedium}>{i.text}</Text>
+                            {i.tips?.length>0 && (
+                              <View style={{ marginTop: 4 }}>
+                                {i.tips.slice(0,2).map((t: any, idx: number) => (
+                                  <Text key={`${i.id}-tip-${idx}`} style={[typography.bodySmall, { opacity: 0.9 }]}>• {typeof t.text === 'string' ? t.text : ''}</Text>
+                                ))}
+                              </View>
+                            )}
+                            <View style={{ flexDirection:'row', gap:12, marginTop:8 }}>
+                              <TouchableOpacity onPress={()=> recordHelpful(i.id.split(':')[0])}>
+                                <Text style={[typography.bodySmall, { color: '#4C8BF5' }]}>Helpful</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={()=> recordNotHelpful(i.id.split(':')[0])}>
+                                <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>Not now</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        ))}
+                        
+                        {hasMore && (
+                          <TouchableOpacity 
+                            onPress={() => setShowMore(!showMore)}
+                            style={{ 
+                              alignSelf: 'flex-start',
+                              marginTop: 8,
+                              paddingVertical: 4,
+                              paddingHorizontal: 8
+                            }}
+                          >
+                            <Text style={[typography.bodySmall, { color: colors.primary[40], fontWeight: '500' }]}>
+                              {showMore ? 'Show less' : 'See more'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    );
+                  })()}
+                </InsightCard>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
       {showMilestone && (
-        <MilestonePopup 
-          milestone={showMilestone} 
+        <MilestonePopup
+          milestone={showMilestone}
           onClose={handleCloseMilestone}
         />
       )}
@@ -401,7 +674,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 32, // add vertical spacing between sections
   },
-  
+
   // Mood selection
   moodContainer: {
     alignItems: 'center',
@@ -425,7 +698,7 @@ const styles = StyleSheet.create({
     maxWidth: 340, // keep grid centered and compact
     alignSelf: 'center',
   },
-  
+
   // Guidance
   guidanceContainer: {
     alignItems: 'center',
@@ -453,7 +726,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: 16,
   },
-  
+
   // Journal
   journalContainer: {
     alignItems: 'center',
@@ -480,7 +753,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginBottom: 24,
   },
-  
+
   // Saved
   savedContainer: {
     alignItems: 'center',

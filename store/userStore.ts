@@ -9,13 +9,15 @@ interface UserState {
   userName: string;
   lastNotificationDate: string;
   lastReviewDate: string | null;
-  
+  partnerPhoneNumber: string | null;
+
   // Actions
   setOnboarded: (value: boolean) => void;
   setProfile: (profile: UserProfile) => void;
   setUserName: (name: string) => void;
   setLastNotificationDate: (date: string) => void;
   setLastReviewDate: (date: string) => void;
+  setPartnerPhoneNumber: (phoneNumber: string | null) => void;
   clearProfile: () => void;
 }
 
@@ -27,13 +29,15 @@ export const useUserStore = create<UserState>()(
       userName: '',
       lastNotificationDate: '',
       lastReviewDate: null,
-      
+      partnerPhoneNumber: null,
+
       setOnboarded: (value) => set({ isOnboarded: value }),
       setProfile: (profile) => set({ profile }),
       setUserName: (name) => set({ userName: name }),
       setLastNotificationDate: (date) => set({ lastNotificationDate: date }),
       setLastReviewDate: (date) => set({ lastReviewDate: date }),
-      clearProfile: () => set({ profile: null, userName: '', lastNotificationDate: '', lastReviewDate: null })
+      setPartnerPhoneNumber: (phoneNumber) => set({ partnerPhoneNumber: phoneNumber }),
+      clearProfile: () => set({ profile: null, userName: '', lastNotificationDate: '', lastReviewDate: null, partnerPhoneNumber: null })
     }),
     {
       name: 'user-storage',

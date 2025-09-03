@@ -66,7 +66,7 @@ const MoodDistribution: React.FC<MoodDistributionProps> = ({ data, size = 140, l
 
   // Tooltip state
   const [tooltip, setTooltip] = useState<null | { mood: string; percent: number; count: number; color: string; x: number; y: number }>(null);
-  const tooltipTimeout = useRef<NodeJS.Timeout | null>(null);
+  const tooltipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter states
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
