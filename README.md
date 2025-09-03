@@ -102,11 +102,11 @@ Mindful Moment now serves two complementary audiences:
 - `components/partner/UnconnectedPartnerView.tsx` - Partner connection setup interface
 - `utils/partnerWeekly.ts` - Weekly relationship insights computation
 
-## Today's Additions — Agentic Actions (Focus Time, Order Your Booster, Prep for Drainer)
+## Agentic Actions (Focus Time, Order Your Booster, Prep for Drainer)
 
 This release makes insights directly actionable for both individuals and partners. We added a lightweight, privacy‑preserving action system that attaches context‑aware buttons to insights and partner postcards.
 
-### What shipped today
+### What's Ready to be shipped
 - Agentic actions pipeline
   - New Action/ActionType model and AdvisorItem.actions
   - generateActionsFor(...) attaches actions based on template id + payload
