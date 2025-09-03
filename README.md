@@ -2,7 +2,9 @@
 
 ## Overview
 
-**Mindful Moment** is a revolutionary emotional well-being platform that transforms mood tracking from passive data collection into **actionable intelligence**. Unlike traditional apps that simply show charts and graphs, we deliver **explainable AI-powered insights** that automatically generate **one-tap actions** - turning insights into immediate behavior change.
+**Mindful Moment** is an emotional wellness co-pilot that helps you stop just tracking your mood and start improving it.
+
+While other apps give you charts, we give you clarity. Our explainable AI finds patterns in your daily life and presents them as simple, human-readable insights. More importantly, we turn those insights into **one-tap actions**, making it effortless to build positive habits for yourself and your relationship. Whether it's for your own self-care or to better support a partner, Mindful Moment closes the loop between insight and action.
 
 ### 🚀 **What Makes Us Different**
 
